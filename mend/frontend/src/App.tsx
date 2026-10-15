@@ -179,11 +179,35 @@ interface DriftData {
   total_dependencies_current: number;
 }
 
+interface RepositoryInfo {
+  id: string;
+  name: string;
+  path: string;
+  commit_hash: string;
+  short_commit: string;
+  clone_url?: string;
+  is_official: boolean;
+  ecosystem: string;
+  support_level: string;
+  detected_manifests: string[];
+  limitations: string[];
+  is_active: boolean;
+}
+
 interface SystemStatus {
   status: string;
   target_repository: {
+    id: string;
     name: string;
     path: string;
+    commit_hash: string;
+    short_commit: string;
+    clone_url?: string;
+    is_official: boolean;
+    ecosystem: string;
+    support_level: string;
+    detected_manifests: string[];
+    limitations: string[];
     exists: boolean;
     has_pyproject: boolean;
     has_requirements: boolean;
@@ -202,6 +226,14 @@ interface SystemStatus {
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'rules' | 'recommendations' | 'verification' | 'ledger' | 'capsule'>('inventory');
   
+  // Repository states
+  const [repositories, setRepositories] = useState<RepositoryInfo[]>([]);
+  const [activeRepoId, setActiveRepoId] = useState<string>('linkwatch');
+  const [isRepoModalOpen, setIsRepoModalOpen] = useState<boolean>(false);
+  const [newRepoUrl, setNewRepoUrl] = useState<string>('');
+  const [newRepoRef, setNewRepoRef] = useState<string>('');
+  const [addingRepo, setAddingRepo] = useState<boolean>(false);
+
   // Data states
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [dependencies, setDependencies] = useState<Record<string, DependencyReport>>({});
@@ -243,44 +275,66 @@ export const App: React.FC = () => {
     setErrorMsg('Request was cancelled by user. Controls have been restored.');
   };
 
+  const safeFetchJson = async <T,>(url: string, fallback: T): Promise<T> => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.warn(`[MEND API] ${url} returned status ${res.status}`);
+        return fallback;
+      }
+      const ct = res.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) {
+        const text = await res.text();
+        console.warn(`[MEND API] ${url} returned non-JSON:`, text.slice(0, 100));
+        return fallback;
+      }
+      return await res.json();
+    } catch (err: any) {
+      console.warn(`[MEND API] Failed to fetch ${url}:`, err.message);
+      return fallback;
+    }
+  };
+
   const loadAllData = async () => {
     setLoading(true);
     setErrorMsg(null);
     try {
+      // 0. Fetch registered repositories list
+      const repoData = await safeFetchJson<{ active_repo_id: string; repositories: RepositoryInfo[] }>('/api/repositories', { active_repo_id: 'linkwatch', repositories: [] });
+      setRepositories(repoData.repositories || []);
+      setActiveRepoId(repoData.active_repo_id || 'linkwatch');
+
       // 1. Fetch system status
-      const statusRes = await fetch('/api/status');
-      const statusData = await statusRes.json();
+      const statusData = await safeFetchJson<SystemStatus | null>('/api/status', null);
       setStatus(statusData);
 
       // 2. Fetch scan
-      const scanRes = await fetch('/api/scan');
-      const scanData = await scanRes.json();
+      const scanData = await safeFetchJson<any>('/api/scan', { dependencies: {}, manifests_found: [], manifest_conflicts: [] });
       setDependencies(scanData.dependencies || {});
       setManifestConflicts(scanData.manifest_conflicts || []);
 
       // 3. Fetch rules
-      const rulesRes = await fetch('/api/rules');
-      const rulesData = await rulesRes.json();
+      const rulesData = await safeFetchJson<RuleFinding[]>('/api/rules', []);
       setRuleFindings(rulesData || []);
 
       // 4. Fetch baseline tests
-      const testsRes = await fetch('/api/baseline-tests');
-      const testsData = await testsRes.json();
+      const testsData = await safeFetchJson<TestExecutionResult | null>('/api/baseline-tests', null);
       setBaselineTests(testsData);
 
       // 5. Fetch candidates
-      const candRes = await fetch('/api/candidates');
-      const candData = await candRes.json();
+      const candData = await safeFetchJson<VerificationComparison[]>('/api/candidates', []);
       setCandidateVerifications(candData || []);
 
-      // 6. Fetch integrity ledger
-      const ledgerRes = await fetch('/api/ledger');
-      const ledgerJson = await ledgerRes.json();
+      // 6. Fetch recommendations (restores Gemma Advisory count on load/refresh)
+      const recsData = await safeFetchJson<Record<string, MigrationRecommendation>>('/api/recommendations', {});
+      setRecommendations(recsData || {});
+
+      // 7. Fetch integrity ledger
+      const ledgerJson = await safeFetchJson<LedgerData | null>('/api/ledger', null);
       setLedgerData(ledgerJson);
 
-      // 7. Fetch integrity fingerprints & boundaries
-      const integRes = await fetch('/api/integrity');
-      const integJson = await integRes.json();
+      // 8. Fetch integrity fingerprints & boundaries
+      const integJson = await safeFetchJson<IntegrityData | null>('/api/integrity', null);
       setIntegrityData(integJson);
 
     } catch (err: any) {
@@ -288,6 +342,74 @@ export const App: React.FC = () => {
       setErrorMsg(`Could not connect to backend: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSelectRepository = async (repoId: string) => {
+    if (repoId === activeRepoId) {
+      setIsRepoModalOpen(false);
+      return;
+    }
+    setActionLoading(`Switching to repository '${repoId}'...`);
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/repositories/select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo_id: repoId }),
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || `HTTP ${res.status}`);
+      }
+      setIsRepoModalOpen(false);
+      await loadAllData();
+    } catch (err: any) {
+      setErrorMsg(`Failed to select repository: ${err.message}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAddRepository = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRepoUrl.trim()) return;
+    setAddingRepo(true);
+    setActionLoading(`Cloning public repository from ${newRepoUrl.trim()}...`);
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/repositories/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: newRepoUrl.trim(), ref: newRepoRef.trim() || undefined }),
+      });
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail || `HTTP ${res.status}`);
+      }
+      setNewRepoUrl('');
+      setNewRepoRef('');
+      setIsRepoModalOpen(false);
+      await loadAllData();
+    } catch (err: any) {
+      setErrorMsg(`Failed to add repository: ${err.message}`);
+    } finally {
+      setAddingRepo(false);
+      setActionLoading(null);
+    }
+  };
+
+  const handleRefreshActiveRepo = async () => {
+    setActionLoading(`Refreshing revision & clearing caches for active repository...`);
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/repositories/refresh', { method: 'POST' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await loadAllData();
+    } catch (err: any) {
+      setErrorMsg(`Failed to refresh repository: ${err.message}`);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -473,10 +595,40 @@ export const App: React.FC = () => {
           </div>
 
           {/* Precision Diagnostic Status */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'var(--canvas-subtle)', padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)' }}>
-            <div>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'var(--canvas-subtle)', padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ color: 'var(--text-muted)' }}>TARGET:</span>{' '}
-              <span className="mono" style={{ fontWeight: 600, color: 'var(--text-black)' }}>{status?.target_repository.name || 'LinkWatch'}</span>
+              <button
+                onClick={() => setIsRepoModalOpen(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                  color: 'var(--cobalt)',
+                  fontFamily: 'inherit',
+                  fontSize: 'inherit',
+                  textDecoration: 'underline',
+                }}
+                title="Click to switch target or clone a public GitHub repository"
+              >
+                {status?.target_repository.name || 'LinkWatch'}
+              </button>
+              <span className="mono" style={{ fontSize: '0.6875rem', background: 'var(--border)', padding: '1px 5px', borderRadius: '3px' }} title={status?.target_repository.commit_hash}>
+                {status?.target_repository.short_commit || 'local'}
+              </span>
+              <span style={{
+                fontSize: '0.6875rem',
+                padding: '1px 6px',
+                borderRadius: '3px',
+                background: status?.target_repository.support_level === 'full' ? '#ecfdf5' : '#fffbeb',
+                color: status?.target_repository.support_level === 'full' ? '#047857' : '#b45309',
+                fontWeight: 600,
+                border: `1px solid ${status?.target_repository.support_level === 'full' ? '#a7f3d0' : '#fde68a'}`,
+              }}>
+                {status?.target_repository.ecosystem?.split(' ')[0] || 'Python'} ({status?.target_repository.support_level || 'full'})
+              </span>
             </div>
             <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border)' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -486,8 +638,14 @@ export const App: React.FC = () => {
               <span style={{ color: 'var(--text-muted)' }}>({status?.gemma_runtime.is_online ? 'Ollama Online' : 'Offline'})</span>
             </div>
             <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border)' }} />
+            <button className="btn btn-secondary btn-sm" onClick={() => setIsRepoModalOpen(true)} title="Manage repositories">
+              Switch / Add Repo
+            </button>
             <button className="btn btn-secondary btn-sm" onClick={() => handleCheckDrift(true)} disabled={loading || !!actionLoading || loadingDrift} title="Compare current and previous scan snapshots to detect drift">
               {loadingDrift ? 'Diffing...' : 'Drift Check'}
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={handleRefreshActiveRepo} disabled={loading || !!actionLoading} title="Refresh git revision and clear caches">
+              Refresh Rev
             </button>
             <button className="btn btn-secondary btn-sm" onClick={loadAllData} disabled={loading || !!actionLoading}>
               Re-scan
@@ -495,7 +653,7 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Compact Editorial Metadata Strip (Replaces bulky cards) */}
+        {/* Compact Editorial Metadata Strip */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'center', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--canvas-surface)', fontSize: '0.8125rem' }}>
           <div>
             <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Dependencies</span>
@@ -519,21 +677,29 @@ export const App: React.FC = () => {
           <div>
             <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Baseline Suite</span>
             <div style={{ fontWeight: 600, color: baselineTests?.failed_tests ? 'var(--crit-text)' : 'var(--success-text)' }}>
-              {baselineTests ? `${baselineTests.passed_tests} passed, ${baselineTests.failed_tests} failed` : 'Testing...'}
+              {status?.target_repository.support_level !== 'full'
+                ? 'N/A (AST only)'
+                : (baselineTests ? `${baselineTests.passed_tests} passed, ${baselineTests.failed_tests} failed` : 'Testing...')}
             </div>
           </div>
           <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
           <div>
             <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Sandbox Verified Fixes</span>
             <div style={{ fontWeight: 600, color: verifiedFixesCount > 0 ? 'var(--success-text)' : 'var(--text-secondary)' }}>
-              {verifiedFixesCount} verified (Jinja2 &rarr; 10/10 passing)
+              {status?.target_repository.support_level !== 'full'
+                ? 'Unsupported (Python only)'
+                : `${verifiedFixesCount} verified (${status?.target_repository.is_official ? 'Jinja2 \u2192 10/10' : 'Candidate'})`}
             </div>
           </div>
           <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
           <div>
             <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Source SHA-256</span>
             <div className="mono" style={{ fontWeight: 600, color: 'var(--text-black)', fontSize: '0.75rem' }} title={integrityData?.source_snapshot_sha256}>
-              {integrityData?.source_snapshot_sha256 ? `${integrityData.source_snapshot_sha256.slice(0, 10)}...` : 'Calculating...'}
+              {loading
+                ? 'Calculating...'
+                : (integrityData?.source_snapshot_sha256
+                    ? `${integrityData.source_snapshot_sha256.slice(0, 10)}...`
+                    : 'Unavailable')}
             </div>
           </div>
         </div>
@@ -1652,6 +1818,162 @@ export const App: React.FC = () => {
                   Close
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Repository Switcher & Public GitHub Clone Modal */}
+      {isRepoModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: 'var(--radius-xs)', width: '100%', maxWidth: '640px', maxHeight: '85vh', overflowY: 'auto', border: '1px solid var(--border)', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Repository Navigator & Workspaces</h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Switch active repository or clone a public GitHub repository</span>
+              </div>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setIsRepoModalOpen(false)}
+                style={{ padding: '2px 8px', fontSize: '1rem', lineHeight: '1' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div style={{ padding: '20px', fontSize: '0.8125rem', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              
+              {/* Registered Repositories List */}
+              <div>
+                <h4 style={{ margin: '0 0 8px 0', fontSize: '0.8125rem', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+                  Available Workspaces ({repositories.length})
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {repositories.map(repo => (
+                    <div
+                      key={repo.id}
+                      style={{
+                        padding: '12px 14px',
+                        border: `1px solid ${repo.id === activeRepoId ? 'var(--cobalt)' : 'var(--border)'}`,
+                        borderRadius: 'var(--radius-xs)',
+                        background: repo.id === activeRepoId ? 'var(--cobalt-subtle)' : 'var(--canvas-subtle)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '12px',
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <strong style={{ color: 'var(--text-black)' }}>{repo.name}</strong>
+                          {repo.is_official && (
+                            <span className="badge badge-info" style={{ fontSize: '0.6875rem' }}>Official Target</span>
+                          )}
+                          <span style={{
+                            fontSize: '0.6875rem',
+                            padding: '1px 6px',
+                            borderRadius: '3px',
+                            background: repo.support_level === 'full' ? '#ecfdf5' : '#fffbeb',
+                            color: repo.support_level === 'full' ? '#047857' : '#b45309',
+                            fontWeight: 600,
+                            border: `1px solid ${repo.support_level === 'full' ? '#a7f3d0' : '#fde68a'}`,
+                          }}>
+                            {repo.ecosystem} ({repo.support_level})
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          <span>Commit: <code className="mono">{repo.short_commit}</code></span>
+                          <span>&bull;</span>
+                          <span>Manifests: {repo.detected_manifests.join(', ') || 'None'}</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        {repo.id === activeRepoId ? (
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--cobalt)' }}>Active Target</span>
+                        ) : (
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleSelectRepository(repo.id)}
+                            disabled={!!actionLoading}
+                          >
+                            Select
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Add New Public GitHub Repository */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '0.8125rem', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+                  Clone Public GitHub Repository
+                </h4>
+                <p style={{ margin: '0 0 12px 0', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  Fetches public code into an isolated controlled workspace. Code is never executed during inspection. No Personal Access Token required.
+                </p>
+                <form onSubmit={handleAddRepository} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>
+                      GitHub Repository URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://github.com/bottlepy/bottle"
+                      value={newRepoUrl}
+                      onChange={e => setNewRepoUrl(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        fontSize: '0.8125rem',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-xs)',
+                        fontFamily: 'inherit',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>
+                      Branch or Commit Revision (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="main (defaults to default branch HEAD)"
+                      value={newRepoRef}
+                      onChange={e => setNewRepoRef(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        fontSize: '0.8125rem',
+                        border: '1px solid var(--border)',
+                        borderRadius: 'var(--radius-xs)',
+                        fontFamily: 'inherit',
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setIsRepoModalOpen(false)}
+                      disabled={addingRepo}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-sm"
+                      disabled={addingRepo || !newRepoUrl.trim()}
+                    >
+                      {addingRepo ? 'Cloning & Scanning...' : 'Clone & Scan'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
             </div>
           </div>
         </div>

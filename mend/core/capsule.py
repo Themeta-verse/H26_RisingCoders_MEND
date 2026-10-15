@@ -34,14 +34,16 @@ class DependencyCapsuleGenerator:
         baseline_test_result: Optional[TestExecutionResult] = None,
         candidate_verifications: Optional[List[MigrationVerificationComparison]] = None,
         limitations: Optional[List[str]] = None,
+        target_metadata: Optional[Dict[str, Any]] = None,
     ):
         self.scan_result = scan_result
         self.rule_findings = rule_findings
         self.recommendations = recommendations or {}
         self.baseline_test_result = baseline_test_result
         self.candidate_verifications = candidate_verifications or []
+        self.target_metadata = target_metadata or {}
         self.limitations = limitations or [
-            "Analysis bounded to static AST parsing and declared Python package manifests.",
+            "Analysis bounded to static AST parsing and declared package manifests.",
             "Dynamic runtime imports, exec calls, or C-extension behaviors are not analyzed.",
             "Candidate verification executed in isolated sandbox virtualenvs with system packages.",
             "AI-generated migration steps must be reviewed by engineers prior to deployment.",
@@ -77,6 +79,11 @@ class DependencyCapsuleGenerator:
             "target": {
                 "name": self.scan_result.target_name,
                 "path": self.scan_result.target_path,
+                "commit_hash": self.target_metadata.get("commit_hash", "local-snapshot"),
+                "short_commit": self.target_metadata.get("short_commit", "local"),
+                "clone_url": self.target_metadata.get("clone_url"),
+                "ecosystem": self.target_metadata.get("ecosystem", "Python (PEP 508 / PyPI)"),
+                "support_level": self.target_metadata.get("support_level", "full"),
                 "python_requires": self.scan_result.python_requires,
                 "manifests_detected": self.scan_result.manifests_found,
                 "total_python_files": self.scan_result.total_py_files,
@@ -306,7 +313,7 @@ class DependencyCapsuleGenerator:
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>MEND Dependency Exit Capsule</h1>
-                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>{html.escape(target['name'])}</strong> | Generated: <code>{data['generated_at']}</code> | Schema: <code>{data['$schema_version']}</code></p>
+                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>{html.escape(target['name'])}</strong> | Commit: <code>{html.escape(str(target.get('short_commit', 'local')))}</code> | Ecosystem: <strong>{html.escape(str(target.get('ecosystem', 'Python')))}</strong> ({html.escape(str(target.get('support_level', 'full')))}) | Generated: <code>{data['generated_at']}</code></p>
                 </div>
                 <div>
                     <span class="badge badge-info">Track 1: Dependency Resilience</span>

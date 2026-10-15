@@ -243,13 +243,13 @@ class CandidateRunner:
             override_dir = run_dir / "candidate_packages"
             override_dir.mkdir(parents=True, exist_ok=True)
 
+            specs = package_install_spec.split()
             pip_exe = Path(sys.executable).parent / "pip.exe"
             if not pip_exe.is_file():
-                # fallback to base python pip
                 base_py, _ = self._find_target_python()
-                pip_cmd = [str(base_py), "-m", "pip", "install", "--target", str(override_dir), package_install_spec]
+                pip_cmd = [str(base_py), "-m", "pip", "install", "--target", str(override_dir)] + specs
             else:
-                pip_cmd = [str(pip_exe), "install", "--target", str(override_dir), package_install_spec]
+                pip_cmd = [str(pip_exe), "install", "--target", str(override_dir)] + specs
 
             install_proc = subprocess.run(
                 pip_cmd,

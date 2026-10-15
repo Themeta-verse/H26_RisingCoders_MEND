@@ -7,7 +7,8 @@
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-green?style=flat-square)](#)
 [![AI Model](https://img.shields.io/badge/AI%20Model-gemma4%3Ae2b--it--q4__K__M-purple?style=flat-square)](#)
 [![Local Inference](https://img.shields.io/badge/Inference-Ollama%20Local%20(100%25%20Offline)-orange?style=flat-square)](#)
-[![Tests Passing](https://img.shields.io/badge/MEND%20Tests-18%2F18%20Passed-brightgreen?style=flat-square)](#)
+[![Tests Passing](https://img.shields.io/badge/MEND%20Tests-25%2F25%20Passed-brightgreen?style=flat-square)](#)
+[![Multi-Repo](https://img.shields.io/badge/Multi--Repo-Supported-blue?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 ---
@@ -18,12 +19,15 @@ Traditional security tools focus exclusively on known CVE databases. However, re
 
 **MEND** (**Migration Evidence & Dependency Navigator**) is an **evidence-first dependency migration workbench**, not just an AI scanner. It:
 1. Extracts deterministic code usages via static AST parsing and manifest declarations.
-2. Identifies resilience friction points across 8 deterministic rule categories.
-3. Queries a local **Gemma 4** model (`gemma4:e2b-it-q4_K_M`) via Ollama with bounded evidence context (no context bloat, strict JSON schema validation).
-4. Empirically verifies candidate migrations in isolated sandbox directories with real `pytest` execution without mutating the target repository.
-5. Emits auditable, versioned **Dependency Exit Capsules** (JSON schema `1.0.0` and standalone zero-dependency HTML) with cryptographic SHA-256 digests.
-6. Maintains an auditable **Migration Integrity Ledger** tracking dependencies across strict lifecycle states: `OBSERVED → RECOMMENDED → EXECUTED → VERIFIED / FAILED / INCONCLUSIVE`.
-7. Provides **On-Demand Scan Drift Comparison** to detect manifest, AST, and dependency changes between scan snapshots.
+2. Supports **reusable multi-repository scanning** across public GitHub repositories while maintaining `LinkWatch` as the official starter target.
+3. Implements an **adapter-based architecture** with honest capability boundaries (Python: Full Support; JavaScript/Node.js: Partial Static Support).
+4. Identifies resilience friction points across deterministic rule categories.
+5. Queries a local **Gemma 4** model (`gemma4:e2b-it-q4_K_M`) via Ollama with bounded evidence context (no context bloat, strict JSON schema validation).
+6. Empirically verifies candidate migrations in isolated sandbox directories with real `pytest` execution without mutating the target repository.
+7. Emits auditable, versioned **Dependency Exit Capsules** (JSON schema `1.0.0` and standalone zero-dependency HTML) separated by repository identity and revision.
+8. Maintains an auditable **Migration Integrity Ledger** tracking dependencies across strict lifecycle states: `OBSERVED → RECOMMENDED → EXECUTED → VERIFIED / FAILED / INCONCLUSIVE`.
+9. Provides **On-Demand Scan Drift Comparison** to detect manifest, AST, and dependency changes between scan snapshots.
+
 
 ---
 
@@ -181,9 +185,42 @@ Open your browser to: **`http://127.0.0.1:8000`**
 
 ---
 
-## 7. Running the Automated Test Suite
+## 4. Ecosystem Adapter Support Matrix & Honest Boundaries
 
-Run the full MEND pytest test suite (18 unit, rule, API, ledger, and capsule tests):
+MEND separates repository discovery, manifest parsing, source usage analysis, resilience rules, AI advisories, and candidate verification into modular ecosystem adapters without overclaiming capabilities:
+
+| Ecosystem | Support Level | Manifest Parsing | AST Usage Analysis | Deterministic Rules | Gemma 4 Advisory | Sandbox Verification |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **Python** (PEP 508 / PyPI) | **FULL** | `pyproject.toml`, `requirements*.txt`, `setup.py` | `ast.parse` (Import, ImportFrom) | MEND-001–008 | Bounded JSON Schema via Ollama | Isolated virtualenv + `pytest` |
+| **JavaScript / Node.js** (npm) | **PARTIAL** | `package.json`, `package-lock.json` | Regex/AST (`import`, `require`) | Unpinned range, Deprecated pkgs, Zombies | Informational Advisory | **UNSUPPORTED** (Explicit boundary) |
+| **Other / Unknown** | **UNSUPPORTED** | None | None | None | None | **UNSUPPORTED** |
+
+> **Track 1 Compliance Disclosure**: Candidate sandbox verification (running `pytest` in isolated workspace clones) is exclusively implemented for Python repositories. For JavaScript/Node.js, static manifest and AST source analysis are supported, but sandbox execution is explicitly disclaimed to prevent fabricated evidence.
+
+---
+
+## 5. Reusable Multi-Repository Workflow
+
+MEND is not hardcoded to `LinkWatch`. It includes a full multi-repository management system:
+
+1. **Default Official Target**: `LinkWatch` remains the primary challenge target.
+2. **Public GitHub Repository Input**:
+   - Provide any public GitHub repository URL (e.g. `https://github.com/bottlepy/bottle`).
+   - No GitHub Personal Access Token is required for public repositories.
+   - Code is cloned into dedicated controlled workspaces (`mend/workspaces/<owner>__<repo>`).
+   - Exact commit SHA is captured via `git rev-parse HEAD`.
+   - **Zero Code Execution on Inspection**: Source files are inspected purely through AST/regex parsing without executing untrusted code.
+3. **Data Isolation by Identity & Revision**:
+   - Scan snapshots, rule findings, Gemma 4 recommendations, baseline tests, candidate verifications, and exported Capsules are strictly separated by repository ID and commit hash.
+   - Switching back to `LinkWatch` restores LinkWatch's exact state without cross-contamination.
+4. **Fresh Scan on Revision Updates**:
+   - The UI and API support `POST /api/repositories/refresh` to re-fetch revisions and perform fresh scans.
+
+---
+
+## 6. Running the Automated Test Suite
+
+Run the full MEND pytest test suite (25 unit, rule, adapter, multi-repo, API, ledger, and capsule tests):
 ```bash
 # Windows PowerShell:
 $env:PYTHONPATH='.'
@@ -193,12 +230,14 @@ $env:PYTHONPATH='.'
 PYTHONPATH=. ./mend/.venv/bin/python -m pytest mend/tests -v
 ```
 
-All 18 tests execute cleanly:
-- `test_api.py`: Status, scan, scan diff, rules, recommendations, lifecycle ledger, integrity fingerprints, and capsule export routes.
-- `test_capsule.py`: Schema `1.0.0` structure, SHA-256 digest embedding, and export integrity.
+All 25 tests execute cleanly:
+- `test_adapters.py`: Python full detection, JavaScript partial detection & rules, and unsupported ecosystem fallback.
+- `test_api.py`: Repository listing, selection, URL validation, status, scan, scan diff, rules, recommendations, lifecycle ledger, integrity fingerprints, and capsule export routes.
+- `test_capsule.py`: Schema `1.0.0` structure, SHA-256 digest embedding, target metadata, and export integrity.
 - `test_model_client.py`: Bounded prompt construction and structured JSON parsing.
 - `test_rules.py`: Incompatible transitive pairing and deprecation detections.
 - `test_scanner.py`: AST parsing, manifest conflict detection, name normalization, and snapshot diffs.
+
 
 ---
 

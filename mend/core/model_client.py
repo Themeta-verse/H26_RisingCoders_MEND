@@ -25,6 +25,7 @@ DEFAULT_GEMMA_MODEL = "gemma4:e2b-it-q4_K_M"
 GEMMA_METADATA = {
     "model_tag": DEFAULT_GEMMA_MODEL,
     "provider": "Ollama (Local Inference Runtime)",
+    "runtime": "Ollama (Local Inference Runtime)",
     "family": "gemma4",
     "runtime_endpoint": OLLAMA_DEFAULT_URL,
     "license_terms": "Gemma Terms of Use (Google Open Weights)",

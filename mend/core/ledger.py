@@ -96,8 +96,8 @@ class MigrationIntegrityLedger:
             if rec:
                 rec_dict = rec.model_dump() if hasattr(rec, "model_dump") else rec.dict()
                 rec_data = {
-                    "model_tag": GEMMA_METADATA["model_tag"],
-                    "runtime": GEMMA_METADATA["runtime"],
+                    "model_tag": GEMMA_METADATA.get("model_tag", "gemma4:e2b-it-q4_K_M"),
+                    "runtime": GEMMA_METADATA.get("runtime", GEMMA_METADATA.get("provider", "Ollama (Local Inference Runtime)")),
                     "strategy": rec_dict.get("recommendation_type"),
                     "proposed_package": rec_dict.get("proposed_package"),
                     "proposed_specifier": rec_dict.get("proposed_specifier"),

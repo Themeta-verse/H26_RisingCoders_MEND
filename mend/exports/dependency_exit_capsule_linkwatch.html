@@ -77,7 +77,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>MEND Dependency Exit Capsule</h1>
-                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Generated: <code>2026-10-15T09:27:36.399091+00:00</code> | Schema: <code>1.0.0</code></p>
+                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Commit: <code>f52f3930c8</code> | Ecosystem: <strong>Python (PEP 508 / PyPI)</strong> (full) | Generated: <code>2026-10-15T10:07:20.376733+00:00</code></p>
                 </div>
                 <div>
                     <span class="badge badge-info">Track 1: Dependency Resilience</span>
@@ -284,32 +284,12 @@
             
         </section>
 
-        <section><h2>Gemma 4 Migration Recommendations (2)</h2>
-            <div class="rec-card">
-                <h3>Recommendation for <code>Jinja2</code> &rarr; <code>Jinja2 ^3.1.4</code></h3>
-                <p><strong>Strategy:</strong> version_bump | <strong>Confidence:</strong> 95%</p>
-                <p><strong>Target Issue:</strong> Incompatible transitive pairing with modern MarkupSafe due to removal of &#x27;soft_unicode&#x27; in MarkupSafe 3.0.4.</p>
-                <h4>Migration Steps:</h4>
-                <ol><li>Update `requirements.txt` (line 4) and `pyproject.toml` (line 16) to use `Jinja2&gt;=3.1.4` or `Jinja2==3.1.4` (or the latest stable version).</li><li>Verify that all application code relying on Jinja2 imports (e.g., `linkwatch/report.py`) functions correctly with the new version.</li><li>Run the full test suite to ensure no regressions are introduced by the dependency upgrade.</li><li>If necessary, review the Jinja2 3.x migration guide for any breaking changes in the usage of `Environment`, `FileSystemLoader`, or `select_autoescape`.</li></ol>
-                <h4>Suggested Tests:</h4><ul><li><code>Run all existing unit tests for `linkwatch/report.py` to confirm template rendering functionality.</code></li><li><code>Execute integration tests covering report generation to ensure file loading and template resolution remain correct.</code></li><li><code>Verify that the application runs successfully under the new dependency constraints.</code></li></ul>
-                <h4>Unresolved Risks / Gaps:</h4><ul><li>Potential for subtle API changes in Jinja2 3.x that might require minor adjustments to the import or usage patterns.</li><li>If the application relies on specific, deprecated features of Jinja2 2.11.x, those features may be removed in the upgrade.</li></ul>
-            </div>
-            
-            <div class="rec-card">
-                <h3>Recommendation for <code>appdirs</code> &rarr; <code>platformdirs &gt;=3.0.0</code></h3>
-                <p><strong>Strategy:</strong> library_replacement | <strong>Confidence:</strong> 95%</p>
-                <p><strong>Target Issue:</strong> Unmaintained library dependency (appdirs 1.4.4) requiring migration to the standardized replacement.</p>
-                <h4>Migration Steps:</h4>
-                <ol><li>Update requirements.txt and pyproject.toml to replace &#x27;appdirs&#x27; with &#x27;platformdirs&#x27;.</li><li>Install the new dependency: `pip install platformdirs`.</li><li>Modify the import statement in `linkwatch/cache.py` from `from appdirs import user_cache_dir` to `from platformdirs import user_cache_dir`.</li><li>Run the full test suite to ensure that `user_cache_dir` returns the correct, platform-specific cache directory paths.</li></ol>
-                <h4>Suggested Tests:</h4><ul><li><code>Unit tests verifying that `user_cache_dir()` returns the expected directory path across different operating systems (Windows, Linux, macOS).</code></li><li><code>Integration tests ensuring that file operations using the resolved cache directory function correctly.</code></li></ul>
-                <h4>Unresolved Risks / Gaps:</h4><ul><li>Potential for subtle differences in platform path handling or configuration between the two libraries, although unlikely for a drop-in replacement.</li><li>Need to verify that no other internal logic relies on specific behaviors of the old `appdirs` library.</li></ul>
-            </div>
-            </section>
+        
 
         <section>
             <h2>Artifact Integrity & Fingerprints</h2>
             <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; font-size: 0.85rem;">
-                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>d9888193fc61a18a22c5da9c369c2e9a01a486c1c6e891e0ef76143f64eb2a0d</code></p>
+                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>9d86936bfcef37b614a064485c8935e4252d009ef4ccbc92a0e4a6d378af1dd6</code></p>
                 <p style="margin: 0 0 0.5rem 0;"><strong>Target Source Snapshot SHA-256:</strong> <code>1d6112f21ce5ddb7f235a5bc002e810151f8f447d6e09332d908001c25c23c4a</code></p>
                 <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Disclaimer:</strong> SHA-256 digest provides tamper-evident integrity of the serialized export audit record. A hash is not proof of truth, authorship, runtime correctness, or complete security.</p>
             </div>

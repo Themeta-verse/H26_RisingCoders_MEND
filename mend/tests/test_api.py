@@ -101,3 +101,32 @@ def test_api_integrity():
     assert "candidate_runner_safety" in data
     assert "disclaimer" in data
 
+
+def test_api_repositories_list():
+    resp = client.get("/api/repositories")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "active_repo_id" in data
+    assert data["active_repo_id"] == "linkwatch"
+    assert "repositories" in data
+    repos = data["repositories"]
+    assert any(r["id"] == "linkwatch" and r["is_official"] for r in repos)
+
+
+def test_api_repositories_select_invalid():
+    resp = client.post("/api/repositories/select", json={"repo_id": "non_existent_repo_id"})
+    assert resp.status_code == 404
+
+
+def test_api_repositories_add_invalid_url():
+    resp = client.post("/api/repositories/add", json={"url": "not-a-valid-github-url"})
+    assert resp.status_code == 400
+    assert "Invalid GitHub URL" in resp.json()["detail"]
+
+
+def test_api_recommendations_list():
+    resp = client.get("/api/recommendations")
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), dict)
+
+
