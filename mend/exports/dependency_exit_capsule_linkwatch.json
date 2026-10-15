@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.0.0",
-  "capsule_id": "CAPSULE-LINKWATCH-1792060009",
-  "generated_at": "2026-10-15T10:26:49.096568+00:00",
+  "capsule_id": "CAPSULE-LINKWATCH-1792062916",
+  "generated_at": "2026-10-15T11:15:16.555445+00:00",
   "target": {
     "name": "LinkWatch",
     "path": "C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch",
@@ -34,8 +34,8 @@
     "verification_engine": "MEND Sandbox Candidate Runner (pytest)"
   },
   "summary_metrics": {
-    "total_dependencies": 30,
-    "direct_used_dependencies": 27,
+    "total_dependencies": 26,
+    "direct_used_dependencies": 23,
     "unreferenced_dependencies": 3,
     "manifest_conflicts": 1,
     "rule_findings_count": 8,
@@ -199,26 +199,6 @@
         ]
       },
       {
-        "package_name": "dates",
-        "normalized_name": "dates",
-        "installed_version": null,
-        "is_direct_usage": true,
-        "is_manifest_conflicted": false,
-        "conflict_details": "",
-        "manifest_declarations": [],
-        "code_usage_count": 1,
-        "code_usage_locations": [
-          {
-            "file_path": "linkwatch/checker.py",
-            "line_number": 8,
-            "statement": "from .dates import parse_last_modified",
-            "module": "dates",
-            "symbol": "parse_last_modified",
-            "context_snippet": "   6   from requests import Session as S\n   7   \n   8 > from .dates import parse_last_modified\n   9   from .encoding import page_title\n  10   "
-          }
-        ]
-      },
-      {
         "package_name": "datetime",
         "normalized_name": "datetime",
         "installed_version": null,
@@ -226,22 +206,14 @@
         "is_manifest_conflicted": false,
         "conflict_details": "",
         "manifest_declarations": [],
-        "code_usage_count": 3,
+        "code_usage_count": 2,
         "code_usage_locations": [
           {
             "file_path": "linkwatch/checker.py",
             "line_number": 2,
             "statement": "from datetime import datetime, timezone",
             "module": "datetime",
-            "symbol": "datetime",
-            "context_snippet": "   1   import time\n   2 > from datetime import datetime, timezone\n   3   \n   4   import certifi"
-          },
-          {
-            "file_path": "linkwatch/checker.py",
-            "line_number": 2,
-            "statement": "from datetime import datetime, timezone",
-            "module": "datetime",
-            "symbol": "timezone",
+            "symbol": "datetime, timezone",
             "context_snippet": "   1   import time\n   2 > from datetime import datetime, timezone\n   3   \n   4   import certifi"
           },
           {
@@ -251,26 +223,6 @@
             "module": "datetime",
             "symbol": "datetime",
             "context_snippet": "   1 > from datetime import datetime\n   2   \n   3   from jinja2 import Environment, FileSystemLoader, select_autoescape"
-          }
-        ]
-      },
-      {
-        "package_name": "encoding",
-        "normalized_name": "encoding",
-        "installed_version": null,
-        "is_direct_usage": true,
-        "is_manifest_conflicted": false,
-        "conflict_details": "",
-        "manifest_declarations": [],
-        "code_usage_count": 1,
-        "code_usage_locations": [
-          {
-            "file_path": "linkwatch/checker.py",
-            "line_number": 9,
-            "statement": "from .encoding import page_title",
-            "module": "encoding",
-            "symbol": "page_title",
-            "context_snippet": "   7   \n   8   from .dates import parse_last_modified\n   9 > from .encoding import page_title\n  10   \n  11   "
           }
         ]
       },
@@ -302,22 +254,14 @@
         "is_manifest_conflicted": false,
         "conflict_details": "",
         "manifest_declarations": [],
-        "code_usage_count": 2,
+        "code_usage_count": 1,
         "code_usage_locations": [
           {
             "file_path": "tests/conftest.py",
             "line_number": 4,
             "statement": "from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer",
             "module": "http",
-            "symbol": "BaseHTTPRequestHandler",
-            "context_snippet": "   2   import threading\n   3   import time\n   4 > from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer\n   5   \n   6   import pytest"
-          },
-          {
-            "file_path": "tests/conftest.py",
-            "line_number": 4,
-            "statement": "from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer",
-            "module": "http",
-            "symbol": "ThreadingHTTPServer",
+            "symbol": "BaseHTTPRequestHandler, ThreadingHTTPServer",
             "context_snippet": "   2   import threading\n   3   import time\n   4 > from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer\n   5   \n   6   import pytest"
           }
         ]
@@ -383,30 +327,14 @@
             "is_commented": false
           }
         ],
-        "code_usage_count": 3,
+        "code_usage_count": 1,
         "code_usage_locations": [
           {
             "file_path": "linkwatch/report.py",
             "line_number": 3,
             "statement": "from jinja2 import Environment, FileSystemLoader, select_autoescape",
             "module": "jinja2",
-            "symbol": "Environment",
-            "context_snippet": "   1   from datetime import datetime\n   2   \n   3 > from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5   from .resources import TEMPLATE_NAME, template_dir"
-          },
-          {
-            "file_path": "linkwatch/report.py",
-            "line_number": 3,
-            "statement": "from jinja2 import Environment, FileSystemLoader, select_autoescape",
-            "module": "jinja2",
-            "symbol": "FileSystemLoader",
-            "context_snippet": "   1   from datetime import datetime\n   2   \n   3 > from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5   from .resources import TEMPLATE_NAME, template_dir"
-          },
-          {
-            "file_path": "linkwatch/report.py",
-            "line_number": 3,
-            "statement": "from jinja2 import Environment, FileSystemLoader, select_autoescape",
-            "module": "jinja2",
-            "symbol": "select_autoescape",
+            "symbol": "Environment, FileSystemLoader, select_autoescape",
             "context_snippet": "   1   from datetime import datetime\n   2   \n   3 > from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5   from .resources import TEMPLATE_NAME, template_dir"
           }
         ]
@@ -439,7 +367,7 @@
         "is_manifest_conflicted": false,
         "conflict_details": "",
         "manifest_declarations": [],
-        "code_usage_count": 10,
+        "code_usage_count": 7,
         "code_usage_locations": [
           {
             "file_path": "tests/conftest.py",
@@ -462,15 +390,7 @@
             "line_number": 1,
             "statement": "from linkwatch.checker import check_site, fetch",
             "module": "linkwatch",
-            "symbol": "check_site",
-            "context_snippet": "   1 > from linkwatch.checker import check_site, fetch\n   2   from linkwatch.config import Site\n   3   "
-          },
-          {
-            "file_path": "tests/test_checker.py",
-            "line_number": 1,
-            "statement": "from linkwatch.checker import check_site, fetch",
-            "module": "linkwatch",
-            "symbol": "fetch",
+            "symbol": "check_site, fetch",
             "context_snippet": "   1 > from linkwatch.checker import check_site, fetch\n   2   from linkwatch.config import Site\n   3   "
           },
           {
@@ -486,23 +406,7 @@
             "line_number": 3,
             "statement": "from linkwatch.config import Settings, Site, load_settings",
             "module": "linkwatch",
-            "symbol": "Settings",
-            "context_snippet": "   1   import os\n   2   \n   3 > from linkwatch.config import Settings, Site, load_settings\n   4   \n   5   SITES_FILE = os.path.join(os.path.dirname(__file__), os.pardir, \"sites.toml\")"
-          },
-          {
-            "file_path": "tests/test_config.py",
-            "line_number": 3,
-            "statement": "from linkwatch.config import Settings, Site, load_settings",
-            "module": "linkwatch",
-            "symbol": "Site",
-            "context_snippet": "   1   import os\n   2   \n   3 > from linkwatch.config import Settings, Site, load_settings\n   4   \n   5   SITES_FILE = os.path.join(os.path.dirname(__file__), os.pardir, \"sites.toml\")"
-          },
-          {
-            "file_path": "tests/test_config.py",
-            "line_number": 3,
-            "statement": "from linkwatch.config import Settings, Site, load_settings",
-            "module": "linkwatch",
-            "symbol": "load_settings",
+            "symbol": "Settings, Site, load_settings",
             "context_snippet": "   1   import os\n   2   \n   3 > from linkwatch.config import Settings, Site, load_settings\n   4   \n   5   SITES_FILE = os.path.join(os.path.dirname(__file__), os.pardir, \"sites.toml\")"
           },
           {
@@ -610,22 +514,14 @@
             "is_commented": false
           }
         ],
-        "code_usage_count": 2,
+        "code_usage_count": 1,
         "code_usage_locations": [
           {
             "file_path": "linkwatch/config.py",
             "line_number": 4,
             "statement": "from pydantic import BaseModel, validator",
             "module": "pydantic",
-            "symbol": "BaseModel",
-            "context_snippet": "   2   \n   3   import toml\n   4 > from pydantic import BaseModel, validator\n   5   \n   6   "
-          },
-          {
-            "file_path": "linkwatch/config.py",
-            "line_number": 4,
-            "statement": "from pydantic import BaseModel, validator",
-            "module": "pydantic",
-            "symbol": "validator",
+            "symbol": "BaseModel, validator",
             "context_snippet": "   2   \n   3   import toml\n   4 > from pydantic import BaseModel, validator\n   5   \n   6   "
           }
         ]
@@ -723,26 +619,6 @@
         ]
       },
       {
-        "package_name": "report",
-        "normalized_name": "report",
-        "installed_version": null,
-        "is_direct_usage": true,
-        "is_manifest_conflicted": false,
-        "conflict_details": "",
-        "manifest_declarations": [],
-        "code_usage_count": 1,
-        "code_usage_locations": [
-          {
-            "file_path": "linkwatch/cli.py",
-            "line_number": 56,
-            "statement": "from .report import render_report",
-            "module": "report",
-            "symbol": "render_report",
-            "context_snippet": "  54   def report(output, title):\n  55       \"\"\"Render the cached results to an HTML page.\"\"\"\n  56 >     from .report import render_report\n  57   \n  58       results = cache.load_results()"
-          }
-        ]
-      },
-      {
         "package_name": "requests",
         "normalized_name": "requests",
         "installed_version": "2.31.0",
@@ -804,34 +680,6 @@
             "module": "requests",
             "symbol": "requests",
             "context_snippet": "   1 > import requests\n   2   \n   3   USER_AGENT = \"linkwatch/1.0\""
-          }
-        ]
-      },
-      {
-        "package_name": "resources",
-        "normalized_name": "resources",
-        "installed_version": null,
-        "is_direct_usage": true,
-        "is_manifest_conflicted": false,
-        "conflict_details": "",
-        "manifest_declarations": [],
-        "code_usage_count": 2,
-        "code_usage_locations": [
-          {
-            "file_path": "linkwatch/report.py",
-            "line_number": 5,
-            "statement": "from .resources import TEMPLATE_NAME, template_dir",
-            "module": "resources",
-            "symbol": "TEMPLATE_NAME",
-            "context_snippet": "   3   from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5 > from .resources import TEMPLATE_NAME, template_dir\n   6   \n   7   "
-          },
-          {
-            "file_path": "linkwatch/report.py",
-            "line_number": 5,
-            "statement": "from .resources import TEMPLATE_NAME, template_dir",
-            "module": "resources",
-            "symbol": "template_dir",
-            "context_snippet": "   3   from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5 > from .resources import TEMPLATE_NAME, template_dir\n   6   \n   7   "
           }
         ]
       },
@@ -1205,16 +1053,6 @@
           "file": "linkwatch/report.py",
           "line": 3,
           "snippet": "   1   from datetime import datetime\n   2   \n   3 > from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5   from .resources import TEMPLATE_NAME, template_dir"
-        },
-        {
-          "file": "linkwatch/report.py",
-          "line": 3,
-          "snippet": "   1   from datetime import datetime\n   2   \n   3 > from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5   from .resources import TEMPLATE_NAME, template_dir"
-        },
-        {
-          "file": "linkwatch/report.py",
-          "line": 3,
-          "snippet": "   1   from datetime import datetime\n   2   \n   3 > from jinja2 import Environment, FileSystemLoader, select_autoescape\n   4   \n   5   from .resources import TEMPLATE_NAME, template_dir"
         }
       ],
       "suggested_action": "Upgrade Jinja2 to >=3.1.4 (or pin MarkupSafe <2.1.0 in legacy candidate setups)."
@@ -1228,16 +1066,6 @@
       "description": "Source code utilizes Pydantic v1 '@validator' and 'class Config' patterns, while pyproject.toml requests 'pydantic>=2' and requirements.txt locks 'pydantic==1.10.13'.",
       "rationale": "Pydantic v2 deprecates @validator in favor of @field_validator and alters BaseModel.Config. Installing via pyproject.toml without pinning v1 will cause deprecation warnings or validation failures.",
       "evidence_locations": [
-        {
-          "file": "linkwatch/config.py",
-          "line": 4,
-          "snippet": "   2   \n   3   import toml\n   4 > from pydantic import BaseModel, validator\n   5   \n   6   "
-        },
-        {
-          "file": "linkwatch/config.py",
-          "line": 4,
-          "snippet": "   2   \n   3   import toml\n   4 > from pydantic import BaseModel, validator\n   5   \n   6   "
-        },
         {
           "file": "linkwatch/config.py",
           "line": 4,
@@ -1379,14 +1207,14 @@
       "command_executed": "C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Scripts\\python.exe -m pytest -v",
       "cwd": "C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch",
       "exit_code": 1,
-      "duration_seconds": 9.36,
-      "timestamp": "2026-10-15T10:26:39.730340+00:00",
+      "duration_seconds": 9.33,
+      "timestamp": "2026-10-15T11:15:07.218935+00:00",
       "total_tests": 10,
       "passed_tests": 9,
       "failed_tests": 1,
       "skipped_tests": 0,
       "error_count": 0,
-      "raw_stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Scripts\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\nconfigfile: pyproject.toml\ntestpaths: tests\ncollecting ... collected 10 items\n\ntests/test_cache.py::test_cache_round_trip PASSED                        [ 10%]\ntests/test_checker.py::test_ok_is_up PASSED                              [ 20%]\ntests/test_checker.py::test_missing_is_down PASSED                       [ 30%]\ntests/test_checker.py::test_redirect_is_up PASSED                        [ 40%]\ntests/test_checker.py::test_slow_is_up PASSED                            [ 50%]\ntests/test_checker.py::test_closed_port_is_down PASSED                   [ 60%]\ntests/test_checker.py::test_latin1_title PASSED                          [ 70%]\ntests/test_checker.py::test_user_agent PASSED                            [ 80%]\ntests/test_config.py::test_sites_file_loads PASSED                       [ 90%]\ntests/test_report.py::test_report_renders_all_sites FAILED               [100%]\n\n================================== FAILURES ===================================\n________________________ test_report_renders_all_sites ________________________\n\ntmp_path = WindowsPath('C:/Users/vijay/AppData/Local/Temp/pytest-of-Himanshu/pytest-61/test_report_renders_all_sites0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001F62960AA50>\n\n    def test_report_renders_all_sites(tmp_path, monkeypatch):\n        monkeypatch.setenv(\"LINKWATCH_CACHE_DIR\", str(tmp_path))\n        cache.save_results(RESULTS)\n        output = tmp_path / \"status.html\"\n>       result = CliRunner().invoke(cli, [\"report\", \"-o\", str(output)], catch_exceptions=False)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_report.py:20: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n.venv\\Lib\\site-packages\\click\\testing.py:687: in invoke\n    return_value = cli.main(args=args or (), prog_name=prog_name, **extra)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1552: in main\n    rv = self.invoke(ctx)\n         ^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:2032: in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1415: in invoke\n    return ctx.invoke(self.callback, **ctx.params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:910: in invoke\n    return callback(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\nlinkwatch\\cli.py:56: in report\n    from .report import render_report\nlinkwatch\\report.py:3: in <module>\n    from jinja2 import Environment, FileSystemLoader, select_autoescape\n.venv\\Lib\\site-packages\\jinja2\\__init__.py:12: in <module>\n    from .environment import Environment\n.venv\\Lib\\site-packages\\jinja2\\environment.py:25: in <module>\n    from .defaults import BLOCK_END_STRING\n.venv\\Lib\\site-packages\\jinja2\\defaults.py:3: in <module>\n    from .filters import FILTERS as DEFAULT_FILTERS  # noqa: F401\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n    # -*- coding: utf-8 -*-\n    \"\"\"Built-in template filters used with the ``|`` operator.\"\"\"\n    import math\n    import random\n    import re\n    import warnings\n    from collections import namedtuple\n    from itertools import chain\n    from itertools import groupby\n    \n    from markupsafe import escape\n    from markupsafe import Markup\n>   from markupsafe import soft_unicode\nE   ImportError: cannot import name 'soft_unicode' from 'markupsafe' (C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Lib\\site-packages\\markupsafe\\__init__.py)\n\n.venv\\Lib\\site-packages\\jinja2\\filters.py:13: ImportError\n============================== warnings summary ===============================\nlinkwatch\\resources.py:1\n  C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\linkwatch\\resources.py:1: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html\n    import pkg_resources\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED tests/test_report.py::test_report_renders_all_sites - ImportError: can...\n=================== 1 failed, 9 passed, 1 warning in 8.61s ====================\n",
+      "raw_stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Scripts\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\nconfigfile: pyproject.toml\ntestpaths: tests\ncollecting ... collected 10 items\n\ntests/test_cache.py::test_cache_round_trip PASSED                        [ 10%]\ntests/test_checker.py::test_ok_is_up PASSED                              [ 20%]\ntests/test_checker.py::test_missing_is_down PASSED                       [ 30%]\ntests/test_checker.py::test_redirect_is_up PASSED                        [ 40%]\ntests/test_checker.py::test_slow_is_up PASSED                            [ 50%]\ntests/test_checker.py::test_closed_port_is_down PASSED                   [ 60%]\ntests/test_checker.py::test_latin1_title PASSED                          [ 70%]\ntests/test_checker.py::test_user_agent PASSED                            [ 80%]\ntests/test_config.py::test_sites_file_loads PASSED                       [ 90%]\ntests/test_report.py::test_report_renders_all_sites FAILED               [100%]\n\n================================== FAILURES ===================================\n________________________ test_report_renders_all_sites ________________________\n\ntmp_path = WindowsPath('C:/Users/vijay/AppData/Local/Temp/pytest-of-Himanshu/pytest-76/test_report_renders_all_sites0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D774AAA630>\n\n    def test_report_renders_all_sites(tmp_path, monkeypatch):\n        monkeypatch.setenv(\"LINKWATCH_CACHE_DIR\", str(tmp_path))\n        cache.save_results(RESULTS)\n        output = tmp_path / \"status.html\"\n>       result = CliRunner().invoke(cli, [\"report\", \"-o\", str(output)], catch_exceptions=False)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_report.py:20: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n.venv\\Lib\\site-packages\\click\\testing.py:687: in invoke\n    return_value = cli.main(args=args or (), prog_name=prog_name, **extra)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1552: in main\n    rv = self.invoke(ctx)\n         ^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:2032: in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1415: in invoke\n    return ctx.invoke(self.callback, **ctx.params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:910: in invoke\n    return callback(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\nlinkwatch\\cli.py:56: in report\n    from .report import render_report\nlinkwatch\\report.py:3: in <module>\n    from jinja2 import Environment, FileSystemLoader, select_autoescape\n.venv\\Lib\\site-packages\\jinja2\\__init__.py:12: in <module>\n    from .environment import Environment\n.venv\\Lib\\site-packages\\jinja2\\environment.py:25: in <module>\n    from .defaults import BLOCK_END_STRING\n.venv\\Lib\\site-packages\\jinja2\\defaults.py:3: in <module>\n    from .filters import FILTERS as DEFAULT_FILTERS  # noqa: F401\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n    # -*- coding: utf-8 -*-\n    \"\"\"Built-in template filters used with the ``|`` operator.\"\"\"\n    import math\n    import random\n    import re\n    import warnings\n    from collections import namedtuple\n    from itertools import chain\n    from itertools import groupby\n    \n    from markupsafe import escape\n    from markupsafe import Markup\n>   from markupsafe import soft_unicode\nE   ImportError: cannot import name 'soft_unicode' from 'markupsafe' (C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Lib\\site-packages\\markupsafe\\__init__.py)\n\n.venv\\Lib\\site-packages\\jinja2\\filters.py:13: ImportError\n============================== warnings summary ===============================\nlinkwatch\\resources.py:1\n  C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\linkwatch\\resources.py:1: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html\n    import pkg_resources\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED tests/test_report.py::test_report_renders_all_sites - ImportError: can...\n=================== 1 failed, 9 passed, 1 warning in 8.60s ====================\n",
       "raw_stderr": "",
       "failures": [
         {
@@ -1409,7 +1237,7 @@
   ],
   "artifact_integrity": {
     "algorithm": "SHA-256",
-    "capsule_payload_sha256": "03a78da338e3df227856988b8e3331bec035b783a5498678a645cc70788130d3",
+    "capsule_payload_sha256": "e640c60652e25d068ef8879c2a7a3d9f7388758c4fecf0c757e2a849c8d6cedb",
     "source_snapshot_sha256": "1d6112f21ce5ddb7f235a5bc002e810151f8f447d6e09332d908001c25c23c4a",
     "disclaimer": "SHA-256 digest provides tamper-evident integrity of the serialized export audit record. A hash is not proof of truth, authorship, runtime correctness, or complete security."
   }

@@ -11,10 +11,12 @@ from __future__ import annotations
 import json
 import logging
 import re
+import sys
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 import httpx
 from pydantic import BaseModel, Field, ValidationError
+
 
 logger = logging.getLogger("mend.model_client")
 
@@ -45,7 +47,7 @@ class MigrationRecommendation(BaseModel):
     target_issue: str
     recommendation_type: str = Field(
         ...,
-        description="One of: 'version_bump', 'library_replacement', 'prune_dependency', 'code_migration'"
+        description="One of: 'version_bump', 'library_replacement', 'prune_dependency', 'code_migration', 'informational_stdlib'"
     )
     proposed_package: str
     proposed_specifier: str
@@ -126,14 +128,45 @@ class GemmaModelClient:
     def request_recommendation(
         self,
         package_name: str,
-        manifest_declarations: List[Dict[str, Any]],
-        code_usage_locations: List[Dict[str, Any]],
-        rule_findings: List[Dict[str, Any]],
+        manifest_declarations: Optional[List[Dict[str, Any]]] = None,
+        code_usage_locations: Optional[List[Dict[str, Any]]] = None,
+        rule_findings: Optional[List[Dict[str, Any]]] = None,
         observed_test_failure: Optional[str] = None,
         python_requires: Optional[str] = None,
         timeout_seconds: Optional[float] = None,
+        facts: Optional[Dict[str, Any]] = None,
     ) -> MigrationRecommendation:
         """Send bounded evidence to Gemma 4 and validate structured JSON recommendation."""
+        manifest_declarations = manifest_declarations or []
+        code_usage_locations = code_usage_locations or []
+        rule_findings = rule_findings or []
+
+        # 0. Fast-path check for Python standard library built-ins (e.g. http.server, datetime, os)
+        norm_mod = package_name.lower().split(".")[0]
+        is_stdlib = facts.get("is_standard_library", False) if facts else False
+        if is_stdlib or norm_mod in sys.stdlib_module_names or norm_mod in ("datetime", "json", "os", "sys", "re", "typing", "http", "socket", "threading", "time", "urllib"):
+            return MigrationRecommendation(
+                package_name=package_name,
+                target_issue="Standard Library Module (Built-in)",
+                recommendation_type="informational_stdlib",
+                proposed_package=package_name,
+                proposed_specifier=" (Built-in)",
+                migration_steps=[
+                    f"'{package_name}' is part of Python's standard library ({python_requires or '>=3.10'}).",
+                    "No external package declaration or PyPI migration is required.",
+                    "Verify syntax and API usage against project Python version requirements.",
+                ],
+                code_changes=[],
+                assumptions=["Standard library module is bundled with the Python runtime environment."],
+                suggested_tests=[f"python -c 'import {package_name}'"],
+                unresolved_risks=[],
+                confidence_score=1.0,
+                provenance={
+                    **GEMMA_METADATA,
+                    "epistemic_status": "Standard Library Module - Verified Built-in (No Migration Needed)",
+                },
+            )
+
         eff_timeout = timeout_seconds if timeout_seconds is not None else self.timeout_seconds
 
         # 1. Check health quickly (3s timeout)
@@ -147,6 +180,7 @@ class GemmaModelClient:
                 f"Gemma 4 model '{self.model_name}' is not downloaded in Ollama. "
                 f"Available models: {health.available_models}"
             )
+
 
         # 2. Build bounded evidence context
         system_prompt = (

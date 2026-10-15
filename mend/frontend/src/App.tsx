@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 // Type definitions matching backend models
 interface ManifestDeclaration {
@@ -30,6 +30,7 @@ interface DependencyReport {
   is_direct_usage: boolean;
   is_manifest_conflicted: boolean;
   conflict_details: string;
+  is_standard_library?: boolean;
 }
 
 interface RuleFinding {
@@ -138,10 +139,16 @@ interface LedgerEntry {
   };
   capsule_exported: boolean;
   integrity_hash: string;
+  repo_id?: string;
+  commit_hash?: string;
+  short_commit?: string;
 }
 
 interface LedgerData {
   target_repository: string;
+  repo_id?: string;
+  commit_hash?: string;
+  short_commit?: string;
   total_dependencies: number;
   stage_distribution: Record<string, number>;
   ledger_sha256: string;
@@ -150,8 +157,12 @@ interface LedgerData {
   entries: LedgerEntry[];
 }
 
+
 interface IntegrityData {
   target_name: string;
+  repo_id?: string;
+  commit_hash?: string;
+  short_commit?: string;
   source_snapshot_sha256: string;
   scanned_at: string;
   exported_capsules: {
@@ -251,6 +262,8 @@ export const App: React.FC = () => {
   const [driftData, setDriftData] = useState<DriftData | null>(null);
   
   // UI states
+  const loadSequenceRef = useRef<number>(0);
+  const [modalError, setModalError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
@@ -300,52 +313,66 @@ export const App: React.FC = () => {
   };
 
   const loadAllData = async () => {
+    const currentSeq = ++loadSequenceRef.current;
     setLoading(true);
     setErrorMsg(null);
     try {
       // 0. Fetch registered repositories list
       const repoData = await safeFetchJson<{ active_repo_id: string; repositories: RepositoryInfo[] }>('/api/repositories', { active_repo_id: 'linkwatch', repositories: [] });
+      if (loadSequenceRef.current !== currentSeq) return;
       setRepositories(repoData.repositories || []);
       setActiveRepoId(repoData.active_repo_id || 'linkwatch');
 
       // 1. Fetch system status
       const statusData = await safeFetchJson<SystemStatus | null>('/api/status', null);
+      if (loadSequenceRef.current !== currentSeq) return;
       setStatus(statusData);
 
       // 2. Fetch scan
       const scanData = await safeFetchJson<any>('/api/scan', { dependencies: {}, manifests_found: [], manifest_conflicts: [] });
+      if (loadSequenceRef.current !== currentSeq) return;
       setDependencies(scanData.dependencies || {});
       setManifestConflicts(scanData.manifest_conflicts || []);
 
       // 3. Fetch rules
       const rulesData = await safeFetchJson<RuleFinding[]>('/api/rules', []);
+      if (loadSequenceRef.current !== currentSeq) return;
       setRuleFindings(rulesData || []);
 
       // 4. Fetch baseline tests
       const testsData = await safeFetchJson<TestExecutionResult | null>('/api/baseline-tests', null);
+      if (loadSequenceRef.current !== currentSeq) return;
       setBaselineTests(testsData);
 
       // 5. Fetch candidates
       const candData = await safeFetchJson<VerificationComparison[]>('/api/candidates', []);
+      if (loadSequenceRef.current !== currentSeq) return;
       setCandidateVerifications(candData || []);
 
       // 6. Fetch recommendations (restores Gemma Advisory count on load/refresh)
       const recsData = await safeFetchJson<Record<string, MigrationRecommendation>>('/api/recommendations', {});
+      if (loadSequenceRef.current !== currentSeq) return;
       setRecommendations(recsData || {});
 
       // 7. Fetch integrity ledger
       const ledgerJson = await safeFetchJson<LedgerData | null>('/api/ledger', null);
+      if (loadSequenceRef.current !== currentSeq) return;
       setLedgerData(ledgerJson);
 
       // 8. Fetch integrity fingerprints & boundaries
       const integJson = await safeFetchJson<IntegrityData | null>('/api/integrity', null);
+      if (loadSequenceRef.current !== currentSeq) return;
       setIntegrityData(integJson);
 
     } catch (err: any) {
-      console.error('Failed to load initial data:', err);
-      setErrorMsg(`Could not connect to backend: ${err.message}`);
+      if (loadSequenceRef.current === currentSeq) {
+        console.error('Failed to load initial data:', err);
+        setErrorMsg(`Could not connect to backend: ${err.message}`);
+      }
     } finally {
-      setLoading(false);
+      if (loadSequenceRef.current === currentSeq) {
+        setLoading(false);
+      }
     }
   };
 
@@ -356,6 +383,21 @@ export const App: React.FC = () => {
     }
     setActionLoading(`Switching to repository '${repoId}'...`);
     setErrorMsg(null);
+    setModalError(null);
+
+    // Invalidate and clear repository-specific state immediately so no cross-repo contamination can display
+    setDependencies({});
+    setManifestConflicts([]);
+    setRuleFindings([]);
+    setRecommendations({});
+    setBaselineTests(null);
+    setCandidateVerifications([]);
+    setLedgerData(null);
+    setIntegrityData(null);
+    setDriftData(null);
+    setSelectedDep(null);
+    setSelectedLedgerPkg(null);
+
     try {
       const res = await fetch('/api/repositories/select', {
         method: 'POST',
@@ -381,6 +423,7 @@ export const App: React.FC = () => {
     setAddingRepo(true);
     setActionLoading(`Cloning public repository from ${newRepoUrl.trim()}...`);
     setErrorMsg(null);
+    setModalError(null);
     try {
       const res = await fetch('/api/repositories/add', {
         method: 'POST',
@@ -393,9 +436,11 @@ export const App: React.FC = () => {
       }
       setNewRepoUrl('');
       setNewRepoRef('');
+      setModalError(null);
       setIsRepoModalOpen(false);
       await loadAllData();
     } catch (err: any) {
+      setModalError(err.message);
       setErrorMsg(`Failed to add repository: ${err.message}`);
     } finally {
       setAddingRepo(false);
@@ -574,6 +619,9 @@ export const App: React.FC = () => {
 
       const comp: VerificationComparison = await res.json();
       setCandidateVerifications(prev => [comp, ...prev.filter(c => c.candidate_id !== comp.candidate_id)]);
+      // Refresh ledger to reflect candidate execution stage immediately
+      const updatedLedger = await safeFetchJson<LedgerData | null>('/api/ledger', null);
+      if (updatedLedger) setLedgerData(updatedLedger);
       setActiveTab('verification');
     } catch (err: any) {
       if (err.name === 'AbortError') {
@@ -845,7 +893,7 @@ export const App: React.FC = () => {
           Sandbox Verification <span className="tab-pill">{candidateVerifications.length}</span>
         </button>
         <button className={`tab-item ${activeTab === 'ledger' ? 'active' : ''}`} onClick={() => setActiveTab('ledger')}>
-          Migration Integrity Ledger <span className="tab-pill">{ledgerData?.entries?.length || Object.keys(dependencies).length}</span>
+          Migration Integrity Ledger <span className="tab-pill">{ledgerData ? ledgerData.entries.length : (loading ? '...' : 0)}</span>
         </button>
         <button className={`tab-item ${activeTab === 'capsule' ? 'active' : ''}`} onClick={() => setActiveTab('capsule')}>
           Exit Capsule Export
@@ -1033,6 +1081,12 @@ export const App: React.FC = () => {
               </div>
 
               <div className="panel-body">
+                {selectedDep.is_standard_library && (
+                  <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', padding: '10px 14px', borderRadius: 'var(--radius-xs)', marginBottom: '16px', fontSize: '0.8125rem' }}>
+                    <strong>Python Standard Library Built-in:</strong> <code>{selectedDep.name}</code> is part of Python's built-in standard library. It does not require a declaration in <code>requirements.txt</code> or <code>pyproject.toml</code>. The absence of a manifest entry is standard Python behavior and not a missing or broken dependency.
+                  </div>
+                )}
+
                 {selectedDep.conflict_details && (
                   <div style={{ background: 'var(--high-bg)', border: '1px solid var(--high-border)', color: 'var(--high-text)', padding: '10px 14px', borderRadius: 'var(--radius-xs)', marginBottom: '16px', fontSize: '0.8125rem' }}>
                     <strong>Manifest Specifier Mismatch:</strong> {selectedDep.conflict_details}
@@ -1046,7 +1100,11 @@ export const App: React.FC = () => {
                       Manifest Declarations ({selectedDep.manifest_declarations.length})
                     </h4>
                     {selectedDep.manifest_declarations.length === 0 ? (
-                      <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>No direct manifest declarations found.</p>
+                      <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                        {selectedDep.is_standard_library
+                          ? 'Standard Library built-in module. No external PyPI manifest declaration required or expected.'
+                          : 'No direct manifest declarations found.'}
+                      </p>
                     ) : (
                       selectedDep.manifest_declarations.map((d, i) => (
                         <div key={i} style={{ border: '1px solid var(--border)', padding: '8px 12px', marginBottom: '8px', borderRadius: 'var(--radius-xs)', backgroundColor: 'var(--canvas-subtle)' }}>
@@ -1062,23 +1120,32 @@ export const App: React.FC = () => {
 
                   {/* Right: Discovered Source Usage */}
                   <div>
-                    <h4 style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                      Discovered AST Import Locations ({selectedDep.direct_imports.length})
-                    </h4>
-                    {selectedDep.direct_imports.length === 0 ? (
-                      <div style={{ border: '1px dashed var(--border)', padding: '16px', borderRadius: 'var(--radius-xs)', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
-                        No AST imports detected in project source files. This dependency is declared in manifests but unused by application logic.
-                      </div>
-                    ) : (
-                      selectedDep.direct_imports.map((loc, i) => (
-                        <div key={i} style={{ border: '1px solid var(--border)', padding: '8px 12px', marginBottom: '8px', borderRadius: 'var(--radius-xs)' }}>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--cobalt)', marginBottom: '4px' }}>
-                            <code className="mono">{loc.file_path}:{loc.line_number}</code>
-                          </div>
-                          <pre className="code-block">{loc.context_snippet || loc.statement}</pre>
-                        </div>
-                      ))
-                    )}
+                    {(() => {
+                      const uniqueImports = selectedDep.direct_imports.filter((loc, idx, self) =>
+                        idx === self.findIndex(l => l.file_path === loc.file_path && l.line_number === loc.line_number && l.statement === loc.statement)
+                      );
+                      return (
+                        <>
+                          <h4 style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                            Discovered AST Import Locations ({uniqueImports.length})
+                          </h4>
+                          {uniqueImports.length === 0 ? (
+                            <div style={{ border: '1px dashed var(--border)', padding: '16px', borderRadius: 'var(--radius-xs)', color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+                              No AST imports detected in project source files. This dependency is declared in manifests but unused by application logic.
+                            </div>
+                          ) : (
+                            uniqueImports.map((loc, i) => (
+                              <div key={i} style={{ border: '1px solid var(--border)', padding: '8px 12px', marginBottom: '8px', borderRadius: 'var(--radius-xs)' }}>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--cobalt)', marginBottom: '4px' }}>
+                                  <code className="mono">{loc.file_path}:{loc.line_number}</code>
+                                </div>
+                                <pre className="code-block">{loc.context_snippet || loc.statement}</pre>
+                              </div>
+                            ))
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -1111,6 +1178,19 @@ export const App: React.FC = () => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => {
+                          const dep = dependencies[finding.package] || Object.values(dependencies).find(d => d.normalized_name === finding.package.toLowerCase());
+                          if (dep) {
+                            setSelectedDep(dep);
+                            setActiveTab('inventory');
+                          }
+                        }}
+                        title="Jump to Evidence Dossier to inspect AST import locations and manifest lines"
+                      >
+                        View Dossier
+                      </button>
                       <button
                         className="btn btn-primary btn-sm"
                         onClick={() => handleRequestRecommendation(finding.package)}
@@ -1215,13 +1295,19 @@ export const App: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleRunVerification(rec.package_name, `${rec.proposed_package}${rec.proposed_specifier}`)}
-                      disabled={!!actionLoading}
-                    >
-                      Verify in Isolated Sandbox
-                    </button>
+                    {rec.recommendation_type === 'informational_stdlib' ? (
+                      <span className="badge badge-info" style={{ padding: '6px 12px', fontSize: '0.8125rem', fontWeight: 600 }}>
+                        Standard Library (No Fix Needed)
+                      </span>
+                    ) : (
+                      <button
+                        className="btn btn-success"
+                        onClick={() => handleRunVerification(rec.package_name, `${rec.proposed_package}${rec.proposed_specifier}`)}
+                        disabled={!!actionLoading}
+                      >
+                        Verify in Isolated Sandbox
+                      </button>
+                    )}
                   </div>
 
                   <div className="panel-body">
@@ -1296,7 +1382,9 @@ export const App: React.FC = () => {
                     <span className={`badge ${baselineTests.success ? 'badge-success' : 'badge-critical'}`}>
                       Original Baseline Environment
                     </span>
-                    <strong style={{ fontSize: '0.875rem' }}>Target: LinkWatch (Read-Only)</strong>
+                    <strong style={{ fontSize: '0.875rem' }}>
+                      Target: {status?.target_repository.name || 'Repository'} ({status?.target_repository.is_official ? 'Official Target, Read-Only' : 'Isolated Workspace'})
+                    </strong>
                   </div>
                   <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                     {baselineTests.command_executed} (Exit code: {baselineTests.exit_code})
@@ -1332,15 +1420,19 @@ export const App: React.FC = () => {
             <div className="panel" style={{ textAlign: 'center', padding: '36px 20px' }}>
               <h3 style={{ fontSize: '0.9375rem', marginBottom: '6px' }}>No Candidate Verifications Run Yet</h3>
               <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
-                Run an isolated experiment for Jinja2 upgrade to verify if it resolves the baseline failure without modifying LinkWatch.
+                {status?.target_repository.is_official
+                  ? 'Run an isolated experiment for Jinja2 upgrade to verify if it resolves the baseline failure without modifying LinkWatch.'
+                  : 'Execute an isolated candidate experiment from the Rule Engine or Gemma 4 Advisory tabs to verify fixes against this workspace.'}
               </p>
-              <button
-                className="btn btn-success"
-                onClick={() => handleRunVerification('Jinja2', 'Jinja2>=3.1.4')}
-                disabled={!!actionLoading}
-              >
-                Verify Candidate (Jinja2 &gt;= 3.1.4) in Sandbox
-              </button>
+              {status?.target_repository.is_official && (
+                <button
+                  className="btn btn-success"
+                  onClick={() => handleRunVerification('Jinja2', 'Jinja2>=3.1.4')}
+                  disabled={!!actionLoading}
+                >
+                  Verify Candidate (Jinja2 &gt;= 3.1.4) in Sandbox
+                </button>
+              )}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1408,7 +1500,7 @@ export const App: React.FC = () => {
               </p>
             </div>
             <div className="mono" style={{ fontSize: '0.75rem', background: 'var(--canvas-subtle)', padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)' }}>
-              LEDGER DIGEST: <strong style={{ color: 'var(--cobalt)' }}>{ledgerData?.ledger_sha256 ? `${ledgerData.ledger_sha256.slice(0, 16)}...` : 'Synchronizing...'}</strong>
+              LEDGER DIGEST: <strong style={{ color: 'var(--cobalt)' }}>{ledgerData?.ledger_sha256 ? `${ledgerData.ledger_sha256.slice(0, 16)}...` : loading ? 'Computing...' : 'Unavailable'}</strong>
             </div>
           </div>
 
@@ -2048,6 +2140,11 @@ export const App: React.FC = () => {
                       }}
                     />
                   </div>
+                  {modalError && (
+                    <div style={{ background: 'var(--crit-bg)', border: '1px solid var(--crit-border)', color: 'var(--crit-text)', padding: '8px 12px', borderRadius: 'var(--radius-xs)', fontSize: '0.75rem', lineHeight: 1.4 }}>
+                      <strong>Clone Failed:</strong> {modalError}
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
                     <button
                       type="button"

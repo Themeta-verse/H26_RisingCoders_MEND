@@ -104,6 +104,8 @@ class DependencyReport:
     is_direct_usage: bool = False
     is_manifest_conflicted: bool = False
     conflict_details: str = ""
+    is_standard_library: bool = False
+
 
 
 @dataclass
@@ -164,11 +166,16 @@ class DependencyScanner:
         # Build dependencies dictionary
         all_pkg_names = set(grouped_manifests.keys())
 
-        # Also map discovered imports back to packages
+        # Also map discovered imports back to packages with deduplication
         import_map_by_pkg: Dict[str, List[CodeUsageLocation]] = {}
+        seen_import_keys = set()
         for loc in all_imports:
             pkg_guess = KNOWN_MODULE_TO_PKG.get(loc.module.lower(), loc.module)
             norm = normalize_name(pkg_guess)
+            dedup_key = (norm, loc.file_path, loc.line_number, loc.module)
+            if dedup_key in seen_import_keys:
+                continue
+            seen_import_keys.add(dedup_key)
             import_map_by_pkg.setdefault(norm, []).append(loc)
             all_pkg_names.add(norm)
 
@@ -203,6 +210,12 @@ class DependencyScanner:
                     "details": conflict_details,
                 })
 
+            # Check if this is a Python standard library module
+            is_stdlib = (
+                norm_name in sys.stdlib_module_names
+                or norm_name in ("datetime", "json", "os", "sys", "re", "typing", "http", "socket", "threading", "time", "urllib")
+            )
+
             dependencies[norm_name] = DependencyReport(
                 name=display_name,
                 normalized_name=norm_name,
@@ -212,14 +225,16 @@ class DependencyScanner:
                 is_direct_usage=is_direct,
                 is_manifest_conflicted=is_conflicted,
                 conflict_details=conflict_details,
+                is_standard_library=is_stdlib,
             )
 
-        # Detect declared dependencies with zero source usage
+        # Detect declared dependencies with zero source usage (excluding standard library)
         unreferenced = [
             dep.name
             for dep in dependencies.values()
-            if dep.manifest_declarations and not dep.is_direct_usage
+            if dep.manifest_declarations and not dep.is_direct_usage and not dep.is_standard_library
         ]
+
 
         manifests_found = [
             f for f in ["pyproject.toml", "requirements.txt", "requirements-dev.txt"]
@@ -391,20 +406,24 @@ class DependencyScanner:
                                 context_snippet=snippet,
                             ))
                     elif isinstance(node, ast.ImportFrom):
+                        if node.level and node.level > 0:
+                            # Relative internal import (e.g. from .dates import ...), skip from third-party scan
+                            continue
                         if node.module:
                             mod = node.module.split(".")[0]
                             line_no = node.lineno
                             stmt = lines[line_no - 1].strip() if line_no <= len(lines) else f"from {node.module} import ..."
-                            for alias in node.names:
-                                snippet = self._get_snippet(lines, line_no)
-                                all_imports.append(CodeUsageLocation(
-                                    file_path=rel_path,
-                                    line_number=line_no,
-                                    statement=stmt,
-                                    module=mod,
-                                    symbol=alias.name,
-                                    context_snippet=snippet,
-                                ))
+                            symbols = ", ".join(alias.name for alias in node.names)
+                            snippet = self._get_snippet(lines, line_no)
+                            all_imports.append(CodeUsageLocation(
+                                file_path=rel_path,
+                                line_number=line_no,
+                                statement=stmt,
+                                module=mod,
+                                symbol=symbols,
+                                context_snippet=snippet,
+                            ))
+
             except Exception:
                 # Handle syntax error or unreadable file gracefully
                 pass

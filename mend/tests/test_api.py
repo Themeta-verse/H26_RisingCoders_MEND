@@ -158,6 +158,34 @@ def test_api_scan_diff():
     assert "removed_dependencies" in data
 
 
+def test_api_ledger_anchoring():
+    resp = client.get("/api/ledger")
+    assert resp.status_code == 200
+    data = resp.json()
+    # Ledger must be anchored to active repository and commit
+    assert data["repo_id"] == "linkwatch"
+    assert "commit_hash" in data
+    assert len(data["commit_hash"]) > 0
+    assert "short_commit" in data
+
+    # Every entry must carry repo_id and commit_hash
+    for entry in data["entries"]:
+        assert entry["repo_id"] == "linkwatch"
+        assert entry["commit_hash"] == data["commit_hash"]
+        assert len(entry["integrity_hash"]) == 64
+
+
+def test_api_recommend_stdlib():
+    resp = client.post("/api/recommend", json={"package_name": "datetime"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["package_name"] == "datetime"
+    assert data["recommendation_type"] == "informational_stdlib"
+    assert data["confidence_score"] == 1.0
+    assert "Built-in" in data["proposed_specifier"]
+
+
+
 
 
 

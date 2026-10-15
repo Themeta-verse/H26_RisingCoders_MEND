@@ -43,3 +43,14 @@ def test_schema_missing_fields():
     bad_json = '{"package_name": "Jinja2"}'
     with pytest.raises(ValueError, match="failed schema validation"):
         client._parse_and_validate_recommendation(bad_json, "Jinja2")
+
+
+def test_stdlib_recommendation_fast_path():
+    client = GemmaModelClient()
+    rec = client.request_recommendation("datetime", facts={"is_standard_library": True})
+    assert rec.package_name == "datetime"
+    assert rec.recommendation_type == "informational_stdlib"
+    assert rec.proposed_specifier == " (Built-in)"
+    assert rec.confidence_score == 1.0
+    assert any("standard library" in s.lower() for s in rec.migration_steps)
+

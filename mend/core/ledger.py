@@ -31,6 +31,9 @@ class LedgerEntry:
     candidate_execution: Optional[Dict[str, Any]] = None
     capsule_exported: bool = False
     integrity_hash: str = ""
+    repo_id: str = ""
+    commit_hash: str = ""
+    short_commit: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -45,11 +48,14 @@ class MigrationIntegrityLedger:
         rule_findings: List[RuleFinding],
         recommendations: Optional[Dict[str, MigrationRecommendation]] = None,
         candidate_verifications: Optional[List[MigrationVerificationComparison]] = None,
+        target_metadata: Optional[Dict[str, Any]] = None,
     ):
         self.scan_result = scan_result
         self.rule_findings = rule_findings
         self.recommendations = recommendations or {}
         self.candidate_verifications = candidate_verifications or []
+        self.target_metadata = target_metadata or {}
+
 
     def build_ledger(self) -> Dict[str, Any]:
         """Construct entries for every scanned dependency in deterministic order."""
@@ -148,9 +154,21 @@ class MigrationIntegrityLedger:
 
             stage_counts[stage] = stage_counts.get(stage, 0) + 1
 
-            # Compute tamper-evident entry digest
+            repo_id = self.target_metadata.get("id", "linkwatch")
+            commit_hash = self.target_metadata.get("commit_hash", "")
+            short_commit = self.target_metadata.get("short_commit", commit_hash[:10] if len(commit_hash) >= 10 else commit_hash)
+
+            # Compute tamper-evident entry digest bound to repository revision
             canonical_repr = json.dumps(
-                {"pkg": dep.name, "obs": obs, "rec": rec_data, "cand": cand_data, "stage": stage},
+                {
+                    "repo_id": repo_id,
+                    "commit_hash": commit_hash,
+                    "pkg": dep.name,
+                    "obs": obs,
+                    "rec": rec_data,
+                    "cand": cand_data,
+                    "stage": stage,
+                },
                 sort_keys=True,
             )
             entry_hash = hashlib.sha256(canonical_repr.encode("utf-8")).hexdigest()
@@ -165,6 +183,9 @@ class MigrationIntegrityLedger:
                     candidate_execution=cand_data,
                     capsule_exported=True,
                     integrity_hash=entry_hash,
+                    repo_id=repo_id,
+                    commit_hash=commit_hash,
+                    short_commit=short_commit,
                 ).to_dict()
             )
 
@@ -174,6 +195,9 @@ class MigrationIntegrityLedger:
 
         return {
             "target_repository": self.scan_result.target_name,
+            "repo_id": self.target_metadata.get("id", "linkwatch"),
+            "commit_hash": self.target_metadata.get("commit_hash", ""),
+            "short_commit": self.target_metadata.get("short_commit", ""),
             "total_dependencies": len(entries),
             "stage_distribution": stage_counts,
             "ledger_sha256": ledger_hash,
@@ -181,3 +205,4 @@ class MigrationIntegrityLedger:
             "lifecycle_rule": "OBSERVED -> RECOMMENDED -> EXECUTED -> VERIFIED / FAILED / INCONCLUSIVE",
             "entries": entries,
         }
+

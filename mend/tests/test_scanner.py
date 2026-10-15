@@ -46,3 +46,32 @@ def test_scan_linkwatch_manifests():
     assert jinja.is_direct_usage is True
     assert len(jinja.direct_imports) >= 1
     assert any("report.py" in loc.file_path for loc in jinja.direct_imports)
+
+
+def test_scan_datetime_deduplication_and_stdlib():
+    target = _get_target()
+    scanner = DependencyScanner(target)
+    scan = scanner.scan()
+
+    # Datetime should be identified as standard library
+    dt = scan.dependencies.get("datetime")
+    assert dt is not None
+    assert dt.is_standard_library is True
+
+    # AST imports for linkwatch/checker.py:2 should be deduplicated (1 occurrence, not 2)
+    checker_locs = [
+        loc for loc in dt.direct_imports
+        if "checker.py" in loc.file_path and loc.line_number == 2
+    ]
+    assert len(checker_locs) == 1, f"Expected exactly 1 deduplicated entry, got {len(checker_locs)}"
+
+    # Standard library modules must never be classified as unreferenced dependencies
+    unreferenced_lower = [d.lower() for d in scan.unreferenced_dependencies]
+    assert "datetime" not in unreferenced_lower
+    assert "os" not in unreferenced_lower
+    assert "sys" not in unreferenced_lower
+
+    # Relative imports (.dates, .report) must not be misclassified as package dependencies
+    for dep_name in scan.dependencies:
+        assert not dep_name.startswith("."), f"Found invalid relative import dependency: {dep_name}"
+

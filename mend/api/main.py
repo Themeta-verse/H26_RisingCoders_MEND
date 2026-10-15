@@ -473,8 +473,10 @@ def get_migration_ledger(target_path: Optional[str] = None):
         rule_findings=session.cached_findings,
         recommendations=session.cached_recommendations,
         candidate_verifications=session.cached_candidate_verifications,
+        target_metadata=session.get_metadata().to_dict(),
     )
     return ledger.build_ledger()
+
 
 
 @app.get("/api/integrity")

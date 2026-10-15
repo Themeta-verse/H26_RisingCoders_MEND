@@ -77,7 +77,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>MEND Dependency Exit Capsule</h1>
-                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Commit: <code>f52f3930c8</code> | Ecosystem: <strong>Python (PEP 508 / PyPI)</strong> (full) | Generated: <code>2026-10-15T10:26:49.134253+00:00</code></p>
+                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Commit: <code>f52f3930c8</code> | Ecosystem: <strong>Python (PEP 508 / PyPI)</strong> (full) | Generated: <code>2026-10-15T11:15:16.588857+00:00</code></p>
                 </div>
                 <div>
                     <span class="badge badge-info">Track 1: Dependency Resilience</span>
@@ -88,8 +88,8 @@
         <section>
             <h2>Executive Metrics</h2>
             <div class="metrics-grid">
-                <div class="metric-card"><div class="metric-val">30</div><div class="metric-label">Total Dependencies</div></div>
-                <div class="metric-card"><div class="metric-val">27</div><div class="metric-label">Direct Code Usages</div></div>
+                <div class="metric-card"><div class="metric-val">26</div><div class="metric-label">Total Dependencies</div></div>
+                <div class="metric-card"><div class="metric-val">23</div><div class="metric-label">Direct Code Usages</div></div>
                 <div class="metric-card"><div class="metric-val" style="color: var(--crit);">1</div><div class="metric-label">Critical Findings</div></div>
                 <div class="metric-card"><div class="metric-val" style="color: var(--high);">2</div><div class="metric-label">High Risk Findings</div></div>
                 <div class="metric-card"><div class="metric-val" style="color: var(--med);">3</div><div class="metric-label">Medium Findings</div></div>
@@ -130,16 +130,8 @@
                     <p class="rationale"><strong>Rationale:</strong> Causes an immediate runtime ImportError when any template is rendered. This directly causes test_report.py to fail in the baseline environment.</p>
                     <p class="action"><strong>Action:</strong> Upgrade Jinja2 to &gt;=3.1.4 (or pin MarkupSafe &lt;2.1.0 in legacy candidate setups).</p>
                     <details>
-                        <summary>Observed Evidence (5 locations)</summary>
+                        <summary>Observed Evidence (3 locations)</summary>
                         <ul><li><code>requirements.txt:4</code>: <pre>Jinja2==2.11.3</pre></li><li><code>pyproject.toml:16</code>: <pre>Jinja2==2.11.3</pre></li><li><code>linkwatch/report.py:3</code>: <pre>   1   from datetime import datetime
-   2   
-   3 &gt; from jinja2 import Environment, FileSystemLoader, select_autoescape
-   4   
-   5   from .resources import TEMPLATE_NAME, template_dir</pre></li><li><code>linkwatch/report.py:3</code>: <pre>   1   from datetime import datetime
-   2   
-   3 &gt; from jinja2 import Environment, FileSystemLoader, select_autoescape
-   4   
-   5   from .resources import TEMPLATE_NAME, template_dir</pre></li><li><code>linkwatch/report.py:3</code>: <pre>   1   from datetime import datetime
    2   
    3 &gt; from jinja2 import Environment, FileSystemLoader, select_autoescape
    4   
@@ -160,16 +152,8 @@
                     <p class="rationale"><strong>Rationale:</strong> Pydantic v2 deprecates @validator in favor of @field_validator and alters BaseModel.Config. Installing via pyproject.toml without pinning v1 will cause deprecation warnings or validation failures.</p>
                     <p class="action"><strong>Action:</strong> Either align manifests to &#x27;pydantic&lt;2.0.0&#x27; or migrate config.py to Pydantic v2 (@field_validator, ConfigDict).</p>
                     <details>
-                        <summary>Observed Evidence (6 locations)</summary>
+                        <summary>Observed Evidence (4 locations)</summary>
                         <ul><li><code>linkwatch/config.py:4</code>: <pre>   2   
-   3   import toml
-   4 &gt; from pydantic import BaseModel, validator
-   5   
-   6   </pre></li><li><code>linkwatch/config.py:4</code>: <pre>   2   
-   3   import toml
-   4 &gt; from pydantic import BaseModel, validator
-   5   
-   6   </pre></li><li><code>linkwatch/config.py:4</code>: <pre>   2   
    3   import toml
    4 &gt; from pydantic import BaseModel, validator
    5   
@@ -289,7 +273,7 @@
         <section>
             <h2>Artifact Integrity & Fingerprints</h2>
             <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; font-size: 0.85rem;">
-                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>03a78da338e3df227856988b8e3331bec035b783a5498678a645cc70788130d3</code></p>
+                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>e640c60652e25d068ef8879c2a7a3d9f7388758c4fecf0c757e2a849c8d6cedb</code></p>
                 <p style="margin: 0 0 0.5rem 0;"><strong>Target Source Snapshot SHA-256:</strong> <code>1d6112f21ce5ddb7f235a5bc002e810151f8f447d6e09332d908001c25c23c4a</code></p>
                 <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Disclaimer:</strong> SHA-256 digest provides tamper-evident integrity of the serialized export audit record. A hash is not proof of truth, authorship, runtime correctness, or complete security.</p>
             </div>
