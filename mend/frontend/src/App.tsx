@@ -101,6 +101,84 @@ interface VerificationComparison {
   unresolved_gaps: string[];
 }
 
+interface LedgerEntry {
+  package_name: string;
+  normalized_name: string;
+  stage: 'OBSERVED' | 'RECOMMENDED' | 'EXECUTED' | 'VERIFIED' | 'FAILED' | 'INCONCLUSIVE';
+  observed_facts: {
+    installed_version?: string;
+    is_direct_usage: boolean;
+    is_manifest_conflicted: boolean;
+    conflict_details: string;
+    manifest_declarations: ManifestDeclaration[];
+    code_usage_count: number;
+    code_usage_locations: CodeUsageLocation[];
+    rule_findings: any[];
+  };
+  recommendation_provenance?: {
+    model_tag: string;
+    runtime: string;
+    strategy: string;
+    proposed_package: string;
+    proposed_specifier: string;
+    confidence_score: number;
+    target_issue: string;
+    migration_steps: string[];
+    unresolved_risks: string[];
+    assumptions: string[];
+  };
+  candidate_execution?: {
+    candidate_id: string;
+    proposed_change: string;
+    status: string;
+    verdict_summary: string;
+    unresolved_gaps: string[];
+    baseline_result: any;
+    candidate_result: any;
+  };
+  capsule_exported: boolean;
+  integrity_hash: string;
+}
+
+interface LedgerData {
+  target_repository: string;
+  total_dependencies: number;
+  stage_distribution: Record<string, number>;
+  ledger_sha256: string;
+  source_snapshot_sha256: string;
+  lifecycle_rule: string;
+  entries: LedgerEntry[];
+}
+
+interface IntegrityData {
+  target_name: string;
+  source_snapshot_sha256: string;
+  scanned_at: string;
+  exported_capsules: {
+    json_filename?: string;
+    json_sha256?: string;
+    html_filename?: string;
+    html_sha256?: string;
+  };
+  candidate_runner_safety: any;
+  disclaimer: string;
+}
+
+interface DriftData {
+  has_drift: boolean;
+  scanned_at_previous: string;
+  scanned_at_current: string;
+  source_sha256_previous: string;
+  source_sha256_current: string;
+  added_dependencies: string[];
+  removed_dependencies: string[];
+  specifier_changes: Array<{ package: string; manifest_file: string; old_specifier: string; new_specifier: string }>;
+  usage_changes: Array<{ package: string; old_is_direct_usage: boolean; new_is_direct_usage: boolean; old_import_count: number; new_import_count: number }>;
+  conflict_changes: Array<{ package: string; change: string }>;
+  total_dependencies_previous: number;
+  total_dependencies_current: number;
+}
+
 interface SystemStatus {
   status: string;
   target_repository: {
@@ -122,7 +200,7 @@ interface SystemStatus {
 }
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'inventory' | 'rules' | 'recommendations' | 'verification' | 'capsule'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'rules' | 'recommendations' | 'verification' | 'ledger' | 'capsule'>('inventory');
   
   // Data states
   const [status, setStatus] = useState<SystemStatus | null>(null);
@@ -132,6 +210,9 @@ export const App: React.FC = () => {
   const [recommendations, setRecommendations] = useState<Record<string, MigrationRecommendation>>({});
   const [baselineTests, setBaselineTests] = useState<TestExecutionResult | null>(null);
   const [candidateVerifications, setCandidateVerifications] = useState<VerificationComparison[]>([]);
+  const [ledgerData, setLedgerData] = useState<LedgerData | null>(null);
+  const [integrityData, setIntegrityData] = useState<IntegrityData | null>(null);
+  const [driftData, setDriftData] = useState<DriftData | null>(null);
   
   // UI states
   const [loading, setLoading] = useState<boolean>(true);
@@ -139,8 +220,12 @@ export const App: React.FC = () => {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const [activeController, setActiveController] = useState<AbortController | null>(null);
   const [selectedDep, setSelectedDep] = useState<DependencyReport | null>(null);
+  const [selectedLedgerPkg, setSelectedLedgerPkg] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [depFilter, setDepFilter] = useState<'all' | 'conflicted' | 'used' | 'unreferenced'>('all');
+  const [ledgerFilter, setLedgerFilter] = useState<'all' | 'VERIFIED' | 'FAILED' | 'RECOMMENDED' | 'OBSERVED'>('all');
+  const [isDriftModalOpen, setIsDriftModalOpen] = useState<boolean>(false);
+  const [loadingDrift, setLoadingDrift] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Initial fetch
@@ -188,11 +273,47 @@ export const App: React.FC = () => {
       const candData = await candRes.json();
       setCandidateVerifications(candData || []);
 
+      // 6. Fetch integrity ledger
+      const ledgerRes = await fetch('/api/ledger');
+      const ledgerJson = await ledgerRes.json();
+      setLedgerData(ledgerJson);
+
+      // 7. Fetch integrity fingerprints & boundaries
+      const integRes = await fetch('/api/integrity');
+      const integJson = await integRes.json();
+      setIntegrityData(integJson);
+
     } catch (err: any) {
       console.error('Failed to load initial data:', err);
       setErrorMsg(`Could not connect to backend: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCheckDrift = async (refresh: boolean = true) => {
+    setLoadingDrift(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch(`/api/scan/diff?refresh=${refresh}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: DriftData = await res.json();
+      setDriftData(data);
+      setIsDriftModalOpen(true);
+      if (refresh) {
+        // Refresh local scan and ledger data
+        const scanRes = await fetch('/api/scan');
+        const scanData = await scanRes.json();
+        setDependencies(scanData.dependencies || {});
+        setManifestConflicts(scanData.manifest_conflicts || []);
+        const ledgerRes = await fetch('/api/ledger');
+        const ledgerJson = await ledgerRes.json();
+        setLedgerData(ledgerJson);
+      }
+    } catch (err: any) {
+      setErrorMsg(`Snapshot drift comparison failed: ${err.message}`);
+    } finally {
+      setLoadingDrift(false);
     }
   };
 
@@ -365,6 +486,9 @@ export const App: React.FC = () => {
               <span style={{ color: 'var(--text-muted)' }}>({status?.gemma_runtime.is_online ? 'Ollama Online' : 'Offline'})</span>
             </div>
             <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border)' }} />
+            <button className="btn btn-secondary btn-sm" onClick={() => handleCheckDrift(true)} disabled={loading || !!actionLoading || loadingDrift} title="Compare current and previous scan snapshots to detect drift">
+              {loadingDrift ? 'Diffing...' : 'Drift Check'}
+            </button>
             <button className="btn btn-secondary btn-sm" onClick={loadAllData} disabled={loading || !!actionLoading}>
               Re-scan
             </button>
@@ -403,6 +527,13 @@ export const App: React.FC = () => {
             <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Sandbox Verified Fixes</span>
             <div style={{ fontWeight: 600, color: verifiedFixesCount > 0 ? 'var(--success-text)' : 'var(--text-secondary)' }}>
               {verifiedFixesCount} verified (Jinja2 &rarr; 10/10 passing)
+            </div>
+          </div>
+          <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
+          <div>
+            <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Source SHA-256</span>
+            <div className="mono" style={{ fontWeight: 600, color: 'var(--text-black)', fontSize: '0.75rem' }} title={integrityData?.source_snapshot_sha256}>
+              {integrityData?.source_snapshot_sha256 ? `${integrityData.source_snapshot_sha256.slice(0, 10)}...` : 'Calculating...'}
             </div>
           </div>
         </div>
@@ -452,6 +583,9 @@ export const App: React.FC = () => {
         </button>
         <button className={`tab-item ${activeTab === 'verification' ? 'active' : ''}`} onClick={() => setActiveTab('verification')}>
           Sandbox Verification <span className="tab-pill">{candidateVerifications.length}</span>
+        </button>
+        <button className={`tab-item ${activeTab === 'ledger' ? 'active' : ''}`} onClick={() => setActiveTab('ledger')}>
+          Migration Integrity Ledger <span className="tab-pill">{ledgerData?.entries?.length || Object.keys(dependencies).length}</span>
         </button>
         <button className={`tab-item ${activeTab === 'capsule' ? 'active' : ''}`} onClick={() => setActiveTab('capsule')}>
           Exit Capsule Export
@@ -1003,7 +1137,305 @@ export const App: React.FC = () => {
         </section>
       )}
 
-      {/* TAB 5: CAPSULE EXPORT */}
+      {/* TAB 5: MIGRATION INTEGRITY LEDGER */}
+      {activeTab === 'ledger' && (
+        <section>
+          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h2 style={{ fontSize: '1.125rem' }}>Migration Integrity Ledger</h2>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+                Auditable evidence-backed lifecycle tracking for every declared and discovered dependency.
+              </p>
+            </div>
+            <div className="mono" style={{ fontSize: '0.75rem', background: 'var(--canvas-subtle)', padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)' }}>
+              LEDGER DIGEST: <strong style={{ color: 'var(--cobalt)' }}>{ledgerData?.ledger_sha256 ? `${ledgerData.ledger_sha256.slice(0, 16)}...` : 'Synchronizing...'}</strong>
+            </div>
+          </div>
+
+          {/* Lifecycle Principle Banner */}
+          <div className="panel" style={{ marginBottom: '18px', background: '#fafafa' }}>
+            <div className="panel-body" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', fontSize: '0.8125rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+                  State Machine:
+                </span>
+                <span className="badge badge-info" style={{ fontWeight: 600 }}>OBSERVED</span>
+                <span style={{ color: 'var(--text-muted)' }}>&rarr;</span>
+                <span className="badge badge-warning" style={{ fontWeight: 600 }}>RECOMMENDED</span>
+                <span style={{ color: 'var(--text-muted)' }}>&rarr;</span>
+                <span className="badge badge-info" style={{ fontWeight: 600 }}>EXECUTED</span>
+                <span style={{ color: 'var(--text-muted)' }}>&rarr;</span>
+                <span className="badge badge-success" style={{ fontWeight: 600 }}>VERIFIED</span>
+                <span style={{ color: 'var(--text-muted)' }}>/</span>
+                <span className="badge badge-critical" style={{ fontWeight: 600 }}>FAILED</span>
+              </div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                Strict Rule: AI recommendations are never marked verified without isolated sandbox pytest execution.
+              </div>
+            </div>
+          </div>
+
+          {/* Lifecycle Summary Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+            <div className="panel" style={{ padding: '12px 16px' }}>
+              <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>Observed</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-black)' }}>{ledgerData?.stage_distribution?.OBSERVED || 0}</div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Static AST & Manifest facts</div>
+            </div>
+            <div className="panel" style={{ padding: '12px 16px' }}>
+              <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>Recommended</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--high-text)' }}>{ledgerData?.stage_distribution?.RECOMMENDED || 0}</div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Local Gemma 4 proposal</div>
+            </div>
+            <div className="panel" style={{ padding: '12px 16px' }}>
+              <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>Sandbox Verified</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--success-text)' }}>{ledgerData?.stage_distribution?.VERIFIED || 0}</div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Isolated test suite passed</div>
+            </div>
+            <div className="panel" style={{ padding: '12px 16px' }}>
+              <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>Failed / Regressed</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--crit-text)' }}>{ledgerData?.stage_distribution?.FAILED || 0}</div>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>Test failures or errors</div>
+            </div>
+          </div>
+
+          {/* Ledger Filter Bar */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            <button
+              className={`btn btn-sm ${ledgerFilter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setLedgerFilter('all')}
+            >
+              All Entries ({ledgerData?.entries?.length || 0})
+            </button>
+            <button
+              className={`btn btn-sm ${ledgerFilter === 'VERIFIED' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setLedgerFilter('VERIFIED')}
+            >
+              Verified ({ledgerData?.stage_distribution?.VERIFIED || 0})
+            </button>
+            <button
+              className={`btn btn-sm ${ledgerFilter === 'RECOMMENDED' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setLedgerFilter('RECOMMENDED')}
+            >
+              Recommended ({ledgerData?.stage_distribution?.RECOMMENDED || 0})
+            </button>
+            <button
+              className={`btn btn-sm ${ledgerFilter === 'OBSERVED' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setLedgerFilter('OBSERVED')}
+            >
+              Observed ({ledgerData?.stage_distribution?.OBSERVED || 0})
+            </button>
+            <button
+              className={`btn btn-sm ${ledgerFilter === 'FAILED' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setLedgerFilter('FAILED')}
+            >
+              Failed ({ledgerData?.stage_distribution?.FAILED || 0})
+            </button>
+          </div>
+
+          {/* Ledger Entries Table */}
+          <div className="panel" style={{ overflow: 'hidden' }}>
+            <table className="table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+              <thead>
+                <tr style={{ background: 'var(--canvas-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ padding: '10px 14px' }}>Package</th>
+                  <th style={{ padding: '10px 14px' }}>Lifecycle Stage</th>
+                  <th style={{ padding: '10px 14px' }}>Manifest Evidence</th>
+                  <th style={{ padding: '10px 14px' }}>AST Imports</th>
+                  <th style={{ padding: '10px 14px' }}>Gemma 4 Advisory</th>
+                  <th style={{ padding: '10px 14px' }}>Sandbox Execution</th>
+                  <th style={{ padding: '10px 14px', textAlign: 'right' }}>Provenance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ledgerData?.entries
+                  ?.filter(e => {
+                    if (ledgerFilter !== 'all' && e.stage !== ledgerFilter) return false;
+                    return true;
+                  })
+                  .map((entry, idx) => {
+                    const isExpanded = selectedLedgerPkg === entry.package_name;
+                    let badgeClass = 'badge-info';
+                    if (entry.stage === 'VERIFIED') badgeClass = 'badge-success';
+                    else if (entry.stage === 'RECOMMENDED') badgeClass = 'badge-warning';
+                    else if (entry.stage === 'FAILED') badgeClass = 'badge-critical';
+
+                    return (
+                      <React.Fragment key={idx}>
+                        <tr
+                          style={{
+                            borderBottom: '1px solid var(--border)',
+                            backgroundColor: isExpanded ? '#fafafa' : undefined,
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setSelectedLedgerPkg(isExpanded ? null : entry.package_name)}
+                        >
+                          <td style={{ padding: '10px 14px', fontWeight: 600 }}>
+                            <code>{entry.package_name}</code>
+                            {entry.observed_facts.installed_version && (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '6px' }}>
+                                (v{entry.observed_facts.installed_version})
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            <span className={`badge ${badgeClass}`}>{entry.stage}</span>
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {entry.observed_facts.manifest_declarations.length} decl ({entry.observed_facts.manifest_declarations.map(d => d.manifest_file).join(', ')})
+                            {entry.observed_facts.is_manifest_conflicted && (
+                              <span className="badge badge-warning" style={{ marginLeft: '6px' }}>Conflict</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {entry.observed_facts.code_usage_count > 0 ? (
+                              <span style={{ color: 'var(--text-black)' }}>{entry.observed_facts.code_usage_count} call sites</span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>0 (Zombie / Unreferenced)</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {entry.recommendation_provenance ? (
+                              <span>
+                                <strong>{entry.recommendation_provenance.proposed_package}</strong> ({Math.round(entry.recommendation_provenance.confidence_score * 100)}%)
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>Not Requested</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 14px' }}>
+                            {entry.candidate_execution ? (
+                              <span style={{ color: entry.candidate_execution.status === 'VERIFIED_FIX' ? 'var(--success-text)' : 'var(--crit-text)', fontWeight: 600 }}>
+                                {entry.candidate_execution.candidate_result.passed} P / {entry.candidate_execution.candidate_result.failed} F ({entry.candidate_execution.status})
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>Not Run</span>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px 14px', textAlign: 'right' }}>
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLedgerPkg(isExpanded ? null : entry.package_name);
+                              }}
+                            >
+                              {isExpanded ? 'Hide' : 'Inspect'}
+                            </button>
+                          </td>
+                        </tr>
+
+                        {isExpanded && (
+                          <tr style={{ background: '#fcfcfc', borderBottom: '1px solid var(--border)' }}>
+                            <td colSpan={7} style={{ padding: '16px 20px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <h4 style={{ margin: 0, fontSize: '0.875rem' }}>
+                                    Full Evidence Provenance Chain: <code>{entry.package_name}</code>
+                                  </h4>
+                                  <div className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>
+                                    ENTRY SHA-256: <code>{entry.integrity_hash}</code>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px' }}>
+                                  {/* 1. Manifest Evidence */}
+                                  <div style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px', borderRadius: 'var(--radius-xs)' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                                      1. Declared Manifest Evidence
+                                    </div>
+                                    {entry.observed_facts.manifest_declarations.map((d, i) => (
+                                      <div key={i} style={{ marginBottom: '6px', fontSize: '0.75rem' }}>
+                                        <code>{d.manifest_file}:{d.line_number}</code>
+                                        <pre className="code-block" style={{ margin: '4px 0', padding: '4px 8px' }}>{d.raw_line}</pre>
+                                        <span style={{ color: 'var(--text-secondary)' }}>Parsed Specifier: <code>{d.specifier || 'unpinned'}</code></span>
+                                      </div>
+                                    ))}
+                                    {entry.observed_facts.is_manifest_conflicted && (
+                                      <div style={{ background: 'var(--high-bg)', border: '1px solid var(--high-border)', color: 'var(--high-text)', padding: '6px 10px', borderRadius: 'var(--radius-xs)', marginTop: '8px', fontSize: '0.75rem' }}>
+                                        {entry.observed_facts.conflict_details}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* 2. AST Usage Evidence */}
+                                  <div style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px', borderRadius: 'var(--radius-xs)' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                                      2. Code Usage Locations ({entry.observed_facts.code_usage_count} AST Imports)
+                                    </div>
+                                    {entry.observed_facts.code_usage_locations.length === 0 ? (
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                        Zero direct imports found across target repository Python AST. Confirmed zombie / unreferenced dependency.
+                                      </div>
+                                    ) : (
+                                      entry.observed_facts.code_usage_locations.slice(0, 3).map((loc, i) => (
+                                        <div key={i} style={{ marginBottom: '6px', fontSize: '0.75rem' }}>
+                                          <code>{loc.file_path}:{loc.line_number}</code>
+                                          <pre className="code-block" style={{ margin: '4px 0', padding: '4px 8px' }}>{loc.statement}</pre>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* 3. Gemma 4 Advisory */}
+                                {entry.recommendation_provenance && (
+                                  <div style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px', borderRadius: 'var(--radius-xs)' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                                      3. Gemma 4 Model Provenance ({entry.recommendation_provenance.model_tag} via {entry.recommendation_provenance.runtime})
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', display: 'flex', gap: '16px', marginBottom: '8px' }}>
+                                      <div><strong>Strategy:</strong> {entry.recommendation_provenance.strategy}</div>
+                                      <div><strong>Target Package:</strong> <code>{entry.recommendation_provenance.proposed_package} {entry.recommendation_provenance.proposed_specifier}</code></div>
+                                      <div><strong>Confidence:</strong> {Math.round(entry.recommendation_provenance.confidence_score * 100)}%</div>
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', marginBottom: '6px' }}>
+                                      <strong>Migration Steps:</strong>
+                                      <ol style={{ margin: '4px 0 0 16px', padding: 0 }}>
+                                        {entry.recommendation_provenance.migration_steps.map((st, i) => (
+                                          <li key={i}>{st}</li>
+                                        ))}
+                                      </ol>
+                                    </div>
+                                    {entry.recommendation_provenance.unresolved_risks.length > 0 && (
+                                      <div style={{ fontSize: '0.75rem', color: 'var(--crit-text)' }}>
+                                        <strong>Unresolved Risks:</strong> {entry.recommendation_provenance.unresolved_risks.join('; ')}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* 4. Candidate Sandbox Execution */}
+                                {entry.candidate_execution && (
+                                  <div style={{ background: '#fff', border: '1px solid var(--border)', padding: '12px', borderRadius: 'var(--radius-xs)' }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                                      4. Isolated Sandbox Execution ({entry.candidate_execution.candidate_id})
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', marginBottom: '6px' }}>
+                                      <strong>Execution Command:</strong> <code>{entry.candidate_execution.candidate_result.command}</code>
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', marginBottom: '6px' }}>
+                                      <strong>Verdict:</strong> {entry.candidate_execution.verdict_summary}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                      Duration: {entry.candidate_execution.candidate_result.duration_s}s | Exit Code: {entry.candidate_execution.candidate_result.exit_code} | Passed: {entry.candidate_execution.candidate_result.passed} | Failed: {entry.candidate_execution.candidate_result.failed}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* TAB 6: CAPSULE EXPORT */}
       {activeTab === 'capsule' && (
         <section>
           <div style={{ marginBottom: '16px' }}>
@@ -1044,6 +1476,69 @@ export const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Cryptographic Artifact Integrity Section */}
+          <div className="panel" style={{ marginBottom: '20px' }}>
+            <div className="panel-header">
+              <h3 style={{ fontSize: '0.875rem' }}>Artifact Integrity & Cryptographic Fingerprints</h3>
+            </div>
+            <div className="panel-body" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', fontSize: '0.8125rem' }}>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>Target Snapshot SHA-256</span>
+                <div className="mono" style={{ fontWeight: 600, wordBreak: 'break-all', marginTop: '4px' }}>
+                  {integrityData?.source_snapshot_sha256 || 'N/A'}
+                </div>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>JSON Export SHA-256</span>
+                <div className="mono" style={{ fontWeight: 600, wordBreak: 'break-all', marginTop: '4px' }}>
+                  {integrityData?.exported_capsules.json_sha256 || 'Generated on export'}
+                </div>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase' }}>HTML Report SHA-256</span>
+                <div className="mono" style={{ fontWeight: 600, wordBreak: 'break-all', marginTop: '4px' }}>
+                  {integrityData?.exported_capsules.html_sha256 || 'Generated on export'}
+                </div>
+              </div>
+              <div style={{ gridColumn: '1 / -1', background: 'var(--canvas-subtle)', padding: '10px 14px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)' }}>
+                <strong style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Integrity Scope & Disclaimer:</strong>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  {integrityData?.disclaimer || 'SHA-256 fingerprints provide tamper-evident verification for pipeline audit trails. A hash is not proof of truth, authorship, runtime correctness, or complete security.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Candidate Runner Safety Specification Panel */}
+          <div className="panel" style={{ marginBottom: '20px' }}>
+            <div className="panel-header">
+              <h3 style={{ fontSize: '0.875rem' }}>Candidate Runner Execution Safety Boundaries</h3>
+            </div>
+            <div className="panel-body" style={{ fontSize: '0.8125rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Isolation Mechanism</span>
+                  <div style={{ fontWeight: 600 }}>Filesystem workspace copy with target-prefixed PYTHONPATH</div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Pristine Target Guarantee</span>
+                  <div style={{ fontWeight: 600, color: 'var(--success-text)' }}>LinkWatch files & venv 100% read-only</div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Process Invocation</span>
+                  <div style={{ fontWeight: 600 }}>Direct argument lists (no shell=True)</div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Resource Bounds</span>
+                  <div style={{ fontWeight: 600 }}>Pytest: 60s timeout | Output cap: 250KB</div>
+                </div>
+              </div>
+              <p style={{ margin: '6px 0 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                {integrityData?.candidate_runner_safety?.sandbox_boundaries_disclaimer}
+              </p>
+            </div>
+          </div>
+
           <div className="panel">
             <div className="panel-header">
               <h3 style={{ fontSize: '0.875rem' }}>Provenance & Schema Metadata</h3>
@@ -1068,6 +1563,98 @@ export const App: React.FC = () => {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Snapshot Drift Comparison Modal */}
+      {isDriftModalOpen && driftData && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#fff', borderRadius: 'var(--radius-xs)', width: '100%', maxWidth: '680px', maxHeight: '85vh', overflowY: 'auto', border: '1px solid var(--border)', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Snapshot Drift Comparison</h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Deterministic diff between previous and current scan snapshots</span>
+              </div>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setIsDriftModalOpen(false)}
+                style={{ padding: '2px 8px', fontSize: '1rem', lineHeight: '1' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div style={{ padding: '20px', fontSize: '0.8125rem', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Drift Status Banner */}
+              <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-xs)', background: driftData.has_drift ? 'var(--high-bg)' : 'var(--success-bg)', border: `1px solid ${driftData.has_drift ? 'var(--high-border)' : 'var(--success-border)'}`, color: driftData.has_drift ? 'var(--high-text)' : 'var(--success-text)', fontWeight: 600 }}>
+                {driftData.has_drift ? '⚠️ Drift Detected Across Scan Snapshots' : '✓ No Drift Detected — Target source and manifest state are identical'}
+              </div>
+
+              {/* Timestamp & SHA-256 Comparison */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--canvas-subtle)', padding: '12px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border)' }}>
+                <div>
+                  <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>Previous Snapshot</div>
+                  <div style={{ fontSize: '0.75rem', marginTop: '2px' }}>{driftData.scanned_at_previous ? new Date(driftData.scanned_at_previous).toLocaleTimeString() : 'Baseline'}</div>
+                  <div className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', marginTop: '2px', wordBreak: 'break-all' }}>
+                    {driftData.source_sha256_previous ? `${driftData.source_sha256_previous.slice(0, 16)}...` : 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>Current Snapshot</div>
+                  <div style={{ fontSize: '0.75rem', marginTop: '2px' }}>{new Date(driftData.scanned_at_current).toLocaleTimeString()}</div>
+                  <div className="mono" style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)', marginTop: '2px', wordBreak: 'break-all' }}>
+                    {driftData.source_sha256_current ? `${driftData.source_sha256_current.slice(0, 16)}...` : 'N/A'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Diffs */}
+              <div>
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '0.8125rem' }}>Added Dependencies ({driftData.added_dependencies.length})</h4>
+                {driftData.added_dependencies.length === 0 ? (
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>None</span>
+                ) : (
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {driftData.added_dependencies.map((pkg, i) => (
+                      <span key={i} className="badge badge-success">{pkg}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '0.8125rem' }}>Removed Dependencies ({driftData.removed_dependencies.length})</h4>
+                {driftData.removed_dependencies.length === 0 ? (
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>None</span>
+                ) : (
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {driftData.removed_dependencies.map((pkg, i) => (
+                      <span key={i} className="badge badge-critical">{pkg}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '0.8125rem' }}>Specifier Modifications ({driftData.specifier_changes.length})</h4>
+                {driftData.specifier_changes.length === 0 ? (
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>No declared specifier changes</span>
+                ) : (
+                  driftData.specifier_changes.map((chg, i) => (
+                    <div key={i} style={{ fontSize: '0.75rem', padding: '4px 0' }}>
+                      <code>{chg.package}</code> in <code>{chg.manifest_file}</code>: <code>{chg.old_specifier}</code> &rarr; <code>{chg.new_specifier}</code>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop: '1px solid var(--border)' }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => setIsDriftModalOpen(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

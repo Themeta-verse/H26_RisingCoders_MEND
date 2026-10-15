@@ -68,3 +68,36 @@ def test_api_recommend_timeout_handling():
     resp = client.post("/api/recommend", json={"package_name": "appdirs", "timeout_seconds": 0.0001})
     assert resp.status_code in [504, 503]
     assert "timed out" in resp.json()["detail"].lower() or "reach ollama" in resp.json()["detail"].lower()
+
+
+def test_api_scan_diff():
+    resp = client.get("/api/scan/diff")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "has_drift" in data
+    assert "source_sha256_current" in data
+    assert "total_dependencies_current" in data
+    assert data["total_dependencies_current"] >= 20
+
+
+def test_api_ledger():
+    resp = client.get("/api/ledger")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "stage_distribution" in data
+    assert "ledger_sha256" in data
+    assert "entries" in data
+    assert len(data["entries"]) >= 20
+    stages = [e["stage"] for e in data["entries"]]
+    assert "OBSERVED" in stages
+
+
+def test_api_integrity():
+    resp = client.get("/api/integrity")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "source_snapshot_sha256" in data
+    assert len(data["source_snapshot_sha256"]) == 64
+    assert "candidate_runner_safety" in data
+    assert "disclaimer" in data
+

@@ -17,7 +17,7 @@ This document organizes the empirical evidence, architectural diagrams, benchmar
 - **Key Metrics**:
   - 100% Zero-Cost Local Inference (Ollama)
   - Zero target repository mutation (100% read-only baseline preservation)
-  - 13/13 passing automated verification tests
+  - 18/18 passing automated verification tests
 
 ---
 
@@ -117,9 +117,12 @@ This document organizes the empirical evidence, architectural diagrams, benchmar
 ---
 
 ### Slide 6: The Dependency Exit Capsule & Impact
-- **Slide Title**: Reusable Governance: The Dependency Exit Capsule
+- **Slide Title**: Reusable Governance: The Dependency Exit Capsule & Migration Ledger
 - **What is the Capsule?**:
   - A standardized, versioned (`$schema_version: "1.0.0"`), auditable artifact capturing the complete lifecycle of a dependency migration.
+- **Migration Integrity Ledger**:
+  - Full lifecycle tracking: `OBSERVED → RECOMMENDED → EXECUTED → VERIFIED / FAILED / INCONCLUSIVE`.
+  - Tamper-evident cryptographic SHA-256 digest embedded for CI/CD compliance audit trails.
 - **Output Formats**:
   1. `dependency_exit_capsule_linkwatch.json`: Complete structured JSON for CI/CD pipelines, compliance audits, and PR automation.
   2. `dependency_exit_capsule_linkwatch.html`: A standalone, zero-dependency executive dashboard suitable for engineering leads and release managers.

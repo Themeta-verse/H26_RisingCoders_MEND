@@ -22,11 +22,17 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from mend.core.candidate_runner import CandidateRunner, MigrationVerificationComparison, TestExecutionResult
+from mend.core.candidate_runner import (
+    SANDBOX_SAFETY_SPECIFICATION,
+    CandidateRunner,
+    MigrationVerificationComparison,
+    TestExecutionResult,
+)
 from mend.core.capsule import DependencyCapsuleGenerator
+from mend.core.ledger import MigrationIntegrityLedger
 from mend.core.model_client import GemmaModelClient, MigrationRecommendation
 from mend.core.rules import RuleEngine, RuleFinding
-from mend.core.scanner import DependencyScanner, RepositoryScanResult
+from mend.core.scanner import DependencyScanner, RepositoryScanResult, diff_scans
 
 app = FastAPI(
     title="MEND API",
@@ -54,6 +60,7 @@ else:
 
 # Global state caches for responsiveness
 _cached_scan: Optional[RepositoryScanResult] = None
+_previous_scan: Optional[RepositoryScanResult] = None
 _cached_findings: Optional[List[RuleFinding]] = None
 _cached_recommendations: Dict[str, MigrationRecommendation] = {}
 _cached_baseline_tests: Optional[TestExecutionResult] = None
@@ -119,16 +126,40 @@ def get_system_status(target_path: Optional[str] = None):
 @app.get("/api/scan")
 def scan_repository(target_path: Optional[str] = None, refresh: bool = False):
     """Execute deterministic static analysis on the target repository."""
-    global _cached_scan
+    global _cached_scan, _previous_scan
     target = get_target_path(target_path)
     if not target.exists():
         raise HTTPException(status_code=404, detail=f"Target directory {target} not found")
 
     if _cached_scan is None or refresh:
+        if _cached_scan is not None and refresh:
+            _previous_scan = _cached_scan
+        scanner = DependencyScanner(target)
+        _cached_scan = scanner.scan()
+        if _previous_scan is None:
+            _previous_scan = _cached_scan
+
+    return _cached_scan.to_dict()
+
+
+@app.get("/api/scan/diff")
+def get_scan_diff(target_path: Optional[str] = None, refresh: bool = False):
+    """Compare previous and current scan snapshots to detect drift on demand."""
+    global _cached_scan, _previous_scan
+    target = get_target_path(target_path)
+    if not target.exists():
+        raise HTTPException(status_code=404, detail=f"Target directory {target} not found")
+
+    if _cached_scan is None:
+        scan_repository(target_path=str(target), refresh=False)
+
+    if refresh:
+        _previous_scan = _cached_scan
         scanner = DependencyScanner(target)
         _cached_scan = scanner.scan()
 
-    return _cached_scan.to_dict()
+    old_scan = _previous_scan if _previous_scan is not None else _cached_scan
+    return diff_scans(old_scan, _cached_scan)
 
 
 @app.get("/api/rules")
@@ -258,6 +289,62 @@ def verify_candidate_experiment(req: VerifyCandidateRequest):
 def list_candidates():
     """List all verified candidate experiments."""
     return [c.to_dict() for c in _cached_candidate_verifications]
+
+
+@app.get("/api/ledger")
+def get_migration_ledger(target_path: Optional[str] = None):
+    """Retrieve the end-to-end Migration Integrity Lifecycle Ledger."""
+    target = get_target_path(target_path)
+    if _cached_scan is None:
+        scan_repository(str(target))
+    if _cached_findings is None:
+        evaluate_rules(str(target))
+
+    ledger = MigrationIntegrityLedger(
+        scan_result=_cached_scan,
+        rule_findings=_cached_findings,
+        recommendations=_cached_recommendations,
+        candidate_verifications=_cached_candidate_verifications,
+    )
+    return ledger.build_ledger()
+
+
+@app.get("/api/integrity")
+def get_artifact_integrity(target_path: Optional[str] = None):
+    """Retrieve SHA-256 integrity digests, export hashes, and runner safety boundaries."""
+    target = get_target_path(target_path)
+    if _cached_scan is None:
+        scan_repository(str(target))
+
+    capsule_json_path = WORKSPACE_ROOT / "mend" / "exports" / f"dependency_exit_capsule_{target.name.lower()}.json"
+    capsule_html_path = WORKSPACE_ROOT / "mend" / "exports" / f"dependency_exit_capsule_{target.name.lower()}.html"
+
+    json_sha256 = ""
+    if capsule_json_path.is_file():
+        import hashlib
+        json_sha256 = hashlib.sha256(capsule_json_path.read_bytes()).hexdigest()
+
+    html_sha256 = ""
+    if capsule_html_path.is_file():
+        import hashlib
+        html_sha256 = hashlib.sha256(capsule_html_path.read_bytes()).hexdigest()
+
+    return {
+        "target_name": _cached_scan.target_name,
+        "source_snapshot_sha256": _cached_scan.sha256_source_digest,
+        "scanned_at": _cached_scan.scanned_at,
+        "exported_capsules": {
+            "json_filename": capsule_json_path.name if capsule_json_path.is_file() else None,
+            "json_sha256": json_sha256 if json_sha256 else None,
+            "html_filename": capsule_html_path.name if capsule_html_path.is_file() else None,
+            "html_sha256": html_sha256 if html_sha256 else None,
+        },
+        "candidate_runner_safety": SANDBOX_SAFETY_SPECIFICATION,
+        "disclaimer": (
+            "SHA-256 hashes provide tamper-evident verification for pipeline audit trails. "
+            "A hash is not proof of truth, authorship, external package trustworthiness, or complete security."
+        ),
+    }
 
 
 @app.post("/api/capsule/generate")

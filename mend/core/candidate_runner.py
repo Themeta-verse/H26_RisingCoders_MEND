@@ -67,6 +67,26 @@ class MigrationVerificationComparison:
         return asdict(self)
 
 
+SANDBOX_SAFETY_SPECIFICATION: Dict[str, Any] = {
+    "isolation_mechanism": "Filesystem sandbox clone with prioritized PYTHONPATH override",
+    "target_repository_mutation": "strictly_prevented (read-only execution)",
+    "process_execution": "Direct argument list invocation (subprocess.run without shell=True)",
+    "command_allowlist": ["pytest", "pip install --target"],
+    "input_allowlist_regex": r"^[a-zA-Z0-9_\-\.\[\]><=~! ]+$",
+    "resource_bounds": {
+        "pytest_timeout_seconds": 60,
+        "pip_timeout_seconds": 90,
+        "max_output_size_bytes": 250000,
+        "sandbox_retention_limit": 5,
+    },
+    "sandbox_boundaries_disclaimer": (
+        "The MEND sandbox isolates target file modifications and candidate dependencies via workspace "
+        "directory clones and localized PYTHONPATH overrides. It executes under current host user privileges "
+        "and does not constitute kernel-level containerization or hypervisor virtualization."
+    ),
+}
+
+
 class CandidateRunner:
     """Manages baseline and isolated candidate test executions."""
 
@@ -77,6 +97,19 @@ class CandidateRunner:
         else:
             self.scratch_dir = self.target_dir.parent / "mend" / "sandbox_runs"
         self.scratch_dir.mkdir(parents=True, exist_ok=True)
+
+    def _prune_old_sandboxes(self, max_keep: int = 5) -> None:
+        """Prune old sandbox run directories to bound temporary resource consumption."""
+        try:
+            cand_dirs = sorted(
+                [d for d in self.scratch_dir.iterdir() if d.is_dir() and d.name.startswith("cand_")],
+                key=lambda p: p.stat().st_mtime,
+            )
+            while len(cand_dirs) > max_keep:
+                oldest = cand_dirs.pop(0)
+                shutil.rmtree(oldest, ignore_errors=True)
+        except Exception:
+            pass
 
     def _find_target_python(self) -> Tuple[Path, str]:
         for cand in [
@@ -165,6 +198,17 @@ class CandidateRunner:
         baseline_result: Optional[TestExecutionResult] = None,
     ) -> MigrationVerificationComparison:
         """Create an isolated sandbox copy, apply candidate modifications, and verify with pytest."""
+        # Validate candidate installation specification to prevent shell/command injection
+        clean_spec = package_install_spec.strip()
+        if not re.match(r"^[a-zA-Z0-9_\-\.\[\]><=~! ]+$", clean_spec):
+            raise ValueError(
+                f"Candidate install specification '{clean_spec}' rejected by allowlist. "
+                "Only alphanumeric package names and PEP 440/508 version specifiers are permitted."
+            )
+
+        # Prune old sandbox runs to conserve disk resources
+        self._prune_old_sandboxes(max_keep=5)
+
         if baseline_result is None:
             baseline_result = self.run_baseline_tests()
 
@@ -299,6 +343,12 @@ class CandidateRunner:
         stdout: str,
         stderr: str,
     ) -> TestExecutionResult:
+        max_chars = 250000
+        if len(stdout) > max_chars:
+            stdout = stdout[:max_chars] + "\n\n[MEND Output Truncated at 250KB limit]"
+        if len(stderr) > max_chars:
+            stderr = stderr[:max_chars] + "\n\n[MEND Output Truncated at 250KB limit]"
+
         total = 0
         passed = 0
         failed = 0

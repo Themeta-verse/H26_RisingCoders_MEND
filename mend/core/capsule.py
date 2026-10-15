@@ -8,6 +8,7 @@ Gemma 4 migration recommendations, and real baseline vs. candidate test results.
 from __future__ import annotations
 
 import datetime
+import hashlib
 import html
 import json
 from dataclasses import asdict
@@ -113,6 +114,29 @@ class DependencyCapsuleGenerator:
             },
             "limitations_and_assumptions": self.limitations,
         }
+
+        # Compute SHA-256 integrity hash over canonical content
+        canonical_content = json.dumps({
+            "target": capsule["target"],
+            "observed_facts": capsule["observed_facts"],
+            "deterministic_rule_findings": capsule["deterministic_rule_findings"],
+            "ai_migration_recommendations": capsule["ai_migration_recommendations"],
+            "test_verification_evidence": capsule["test_verification_evidence"],
+        }, sort_keys=True)
+        content_hash = hashlib.sha256(canonical_content.encode("utf-8")).hexdigest()
+
+        source_hash = getattr(self.scan_result, "sha256_source_digest", "")
+
+        capsule["artifact_integrity"] = {
+            "algorithm": "SHA-256",
+            "capsule_payload_sha256": content_hash,
+            "source_snapshot_sha256": source_hash,
+            "disclaimer": (
+                "SHA-256 digest provides tamper-evident integrity of the serialized export audit record. "
+                "A hash is not proof of truth, authorship, runtime correctness, or complete security."
+            ),
+        }
+
         return capsule
 
     def export_json(self, output_path: str | Path) -> Path:
@@ -310,8 +334,12 @@ class DependencyCapsuleGenerator:
         {f'<section><h2>Gemma 4 Migration Recommendations ({len(recs)})</h2>{recs_html}</section>' if recs_html else ''}
 
         <section>
-            <h2>Test Verification Evidence</h2>
-            {verif_html}
+            <h2>Artifact Integrity & Fingerprints</h2>
+            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; font-size: 0.85rem;">
+                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>{data.get('artifact_integrity', {}).get('capsule_payload_sha256', '')}</code></p>
+                <p style="margin: 0 0 0.5rem 0;"><strong>Target Source Snapshot SHA-256:</strong> <code>{data.get('artifact_integrity', {}).get('source_snapshot_sha256', 'N/A')}</code></p>
+                <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Disclaimer:</strong> {html.escape(data.get('artifact_integrity', {}).get('disclaimer', ''))}</p>
+            </div>
         </section>
 
         <footer>

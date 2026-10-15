@@ -8,6 +8,8 @@ and flags manifest discrepancies.
 from __future__ import annotations
 
 import ast
+import datetime
+import hashlib
 import json
 import os
 import re
@@ -117,6 +119,8 @@ class RepositoryScanResult:
     manifest_conflicts: List[Dict[str, Any]]
     total_py_files: int
     total_loc: int
+    sha256_source_digest: str = ""
+    scanned_at: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -131,6 +135,8 @@ class RepositoryScanResult:
             "manifest_conflicts": self.manifest_conflicts,
             "total_py_files": self.total_py_files,
             "total_loc": self.total_loc,
+            "sha256_source_digest": self.sha256_source_digest,
+            "scanned_at": self.scanned_at,
         }
 
 
@@ -220,6 +226,9 @@ class DependencyScanner:
             if (self.target_dir / f).is_file()
         ]
 
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        source_digest = self._compute_source_digest(py_files, manifests_found)
+
         return RepositoryScanResult(
             target_path=str(self.target_dir),
             target_name=self._get_target_name(),
@@ -232,6 +241,8 @@ class DependencyScanner:
             manifest_conflicts=manifest_conflicts,
             total_py_files=len(py_files),
             total_loc=total_loc,
+            sha256_source_digest=source_digest,
+            scanned_at=timestamp,
         )
 
     def _get_target_name(self) -> str:
@@ -440,3 +451,92 @@ class DependencyScanner:
                 pass
 
         return installed
+
+    def _compute_source_digest(self, py_files: List[Path], manifests: List[str]) -> str:
+        """Compute SHA-256 fingerprint over manifests and Python source files in deterministic order."""
+        h = hashlib.sha256()
+        # Hash manifests first
+        for m_name in sorted(manifests):
+            m_path = self.target_dir / m_name
+            if m_path.is_file():
+                h.update(f"MANIFEST:{m_name}\n".encode("utf-8"))
+                h.update(m_path.read_bytes())
+
+        # Hash Python files sorted by relative path
+        for py_path in sorted(py_files):
+            try:
+                rel = py_path.relative_to(self.target_dir).as_posix()
+                h.update(f"SOURCE:{rel}\n".encode("utf-8"))
+                h.update(py_path.read_bytes())
+            except Exception:
+                pass
+
+        return h.hexdigest()
+
+
+def diff_scans(old_scan: RepositoryScanResult, new_scan: RepositoryScanResult) -> Dict[str, Any]:
+    """Perform deterministic snapshot diff comparison between two scan results."""
+    old_pkgs = set(old_scan.dependencies.keys())
+    new_pkgs = set(new_scan.dependencies.keys())
+
+    added = sorted(list(new_pkgs - old_pkgs))
+    removed = sorted(list(old_pkgs - new_pkgs))
+
+    specifier_changes = []
+    usage_changes = []
+
+    for pkg in sorted(list(old_pkgs & new_pkgs)):
+        old_dep = old_scan.dependencies[pkg]
+        new_dep = new_scan.dependencies[pkg]
+
+        # Compare declarations
+        old_decls = {d.manifest_file: d.specifier for d in old_dep.manifest_declarations}
+        new_decls = {d.manifest_file: d.specifier for d in new_dep.manifest_declarations}
+
+        for m_file, new_spec in new_decls.items():
+            old_spec = old_decls.get(m_file)
+            if old_spec is not None and old_spec != new_spec:
+                specifier_changes.append({
+                    "package": new_dep.name,
+                    "manifest_file": m_file,
+                    "old_specifier": old_spec,
+                    "new_specifier": new_spec,
+                })
+
+        # Compare usage
+        old_count = len(old_dep.direct_imports)
+        new_count = len(new_dep.direct_imports)
+        if old_dep.is_direct_usage != new_dep.is_direct_usage or old_count != new_count:
+            usage_changes.append({
+                "package": new_dep.name,
+                "old_is_direct_usage": old_dep.is_direct_usage,
+                "new_is_direct_usage": new_dep.is_direct_usage,
+                "old_import_count": old_count,
+                "new_import_count": new_count,
+            })
+
+    old_conflicts = {c.get("package", c.get("package_name", "")).lower() for c in old_scan.manifest_conflicts}
+    new_conflicts = {c.get("package", c.get("package_name", "")).lower() for c in new_scan.manifest_conflicts}
+
+    conflict_changes = []
+    for pkg in sorted(list(new_conflicts - old_conflicts)):
+        conflict_changes.append({"package": pkg, "change": "conflict_introduced"})
+    for pkg in sorted(list(old_conflicts - new_conflicts)):
+        conflict_changes.append({"package": pkg, "change": "conflict_resolved"})
+
+    has_drift = bool(added or removed or specifier_changes or usage_changes or conflict_changes or (old_scan.sha256_source_digest != new_scan.sha256_source_digest))
+
+    return {
+        "has_drift": has_drift,
+        "scanned_at_previous": old_scan.scanned_at,
+        "scanned_at_current": new_scan.scanned_at,
+        "source_sha256_previous": old_scan.sha256_source_digest,
+        "source_sha256_current": new_scan.sha256_source_digest,
+        "added_dependencies": added,
+        "removed_dependencies": removed,
+        "specifier_changes": specifier_changes,
+        "usage_changes": usage_changes,
+        "conflict_changes": conflict_changes,
+        "total_dependencies_previous": len(old_pkgs),
+        "total_dependencies_current": len(new_pkgs),
+    }
