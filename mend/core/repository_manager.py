@@ -84,6 +84,7 @@ class RepositorySession:
         self.cached_recommendations: Dict[str, MigrationRecommendation] = {}
         self.cached_baseline_tests: Optional[TestExecutionResult] = None
         self.cached_candidate_verifications: List[MigrationVerificationComparison] = []
+        self.cached_intelligence: Optional[Dict[str, Any]] = None
         self.cached_capsule_payload: Optional[Dict[str, Any]] = None
         self.exported_capsule_json: Optional[str] = None
         self.exported_capsule_html: Optional[str] = None
@@ -209,6 +210,7 @@ class RepositorySession:
         self.cached_recommendations = {}
         self.cached_baseline_tests = None
         self.cached_candidate_verifications = []
+        self.cached_intelligence = None
         self.cached_capsule_payload = None
         self.exported_capsule_json = None
         self.exported_capsule_html = None

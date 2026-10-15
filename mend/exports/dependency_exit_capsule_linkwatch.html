@@ -67,6 +67,54 @@
         code { background: #f4f4f5; padding: 0.15rem 0.35rem; border-radius: 2px; font-family: ui-monospace, monospace; color: #09090b; border: 1px solid #e4e4e7; }
         pre { background: #f8fafc; padding: 0.8rem; border-radius: 2px; overflow-x: auto; font-family: ui-monospace, monospace; font-size: 0.8rem; border: 1px solid var(--border); }
         details { margin-top: 0.5rem; color: var(--text-muted); }
+        table.intel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
+            margin-bottom: 1.5rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+        }
+        table.intel-table th {
+            background: #f8fafc;
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: #3f3f46;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+        }
+        table.intel-table td {
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }
+        table.intel-table tr:hover {
+            background: #fbfdff;
+        }
+        .link-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+        .link-pill {
+            display: inline-block;
+            padding: 0.12rem 0.4rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 2px;
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .link-pill:hover {
+            background: #dbeafe;
+            text-decoration: underline;
+        }
         summary { cursor: pointer; color: var(--primary); font-weight: 500; font-size: 0.8rem; }
         footer { border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 3rem; color: var(--text-muted); font-size: 0.8rem; }
     </style>
@@ -77,7 +125,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>MEND Dependency Exit Capsule</h1>
-                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Commit: <code>f52f3930c8</code> | Ecosystem: <strong>Python (PEP 508 / PyPI)</strong> (full) | Generated: <code>2026-10-15T11:15:16.588857+00:00</code></p>
+                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Commit: <code>f52f3930c8</code> | Ecosystem: <strong>Python (PEP 508 / PyPI)</strong> (full) | Generated: <code>2026-10-15T11:49:18.910936+00:00</code></p>
                 </div>
                 <div>
                     <span class="badge badge-info">Track 1: Dependency Resilience</span>
@@ -95,6 +143,447 @@
                 <div class="metric-card"><div class="metric-val" style="color: var(--med);">3</div><div class="metric-label">Medium Findings</div></div>
                 <div class="metric-card"><div class="metric-val" style="color: var(--info);">3</div><div class="metric-label">Unreferenced / Zombie</div></div>
             </div>
+        </section>
+
+        <section>
+            <h2>Dependency Intelligence &amp; Side-by-Side Version Comparison (26 Analyzed)</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 0.75rem;">
+                Official registry metadata (PyPI) cross-referenced against repository constraints, breaking changes, and candidate verification. Click links to inspect official upstream release notes and documentation.
+            </p>
+            
+        <table class="intel-table">
+            <thead>
+                <tr>
+                    <th>Package</th>
+                    <th>Current</th>
+                    <th>Latest Stable</th>
+                    <th>Recommended Target</th>
+                    <th>Severity / Compat</th>
+                    <th>Intelligence & Evidence Links</th>
+                    <th>Verification</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+            <tr>
+                <td><strong><code>appdirs</code></strong></td>
+                <td><code>1.4.4</code></td>
+                <td><code>1.4.4</code></td>
+                <td><strong><code>platformdirs&gt;=3.0.0</code></strong></td>
+                <td>
+                    <span class="badge badge-critical">major</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">requires_migration</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">appdirs has been unmaintained since 2020. platformdirs is the active, backwards-compatible community-maintained successor.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/appdirs/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/appdirs/1.4.4/" target="_blank" rel="noopener noreferrer">Release Notes (1.4.4)</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>certifi</code></strong></td>
+                <td><code>2026.7.22</code></td>
+                <td><code>2026.7.22</code></td>
+                <td><strong><code>&gt;=2026.7.22</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release 2026.7.22 available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/certifi/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/certifi/2026.7.22/" target="_blank" rel="noopener noreferrer">Release Notes (2026.7.22)</a><a class="link-pill" href="https://github.com/certifi/python-certifi" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>chardet</code></strong></td>
+                <td><code>5.2.0</code></td>
+                <td><code>7.6.0</code></td>
+                <td><strong><code>&gt;=7.6.0</code></strong></td>
+                <td>
+                    <span class="badge badge-critical">major</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">requires_migration</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Current constraint pins major release v5.x; latest upstream release is v7.x. Evaluate changelog for breaking changes.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/chardet/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/chardet/7.6.0/" target="_blank" rel="noopener noreferrer">Release Notes (7.6.0)</a><a class="link-pill" href="https://chardet.readthedocs.io" target="_blank" rel="noopener noreferrer">Official Documentation</a><a class="link-pill" href="https://chardet.readthedocs.io/en/latest/changelog.html" target="_blank" rel="noopener noreferrer">Official Changelog</a><a class="link-pill" href="https://github.com/chardet/chardet" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>click</code></strong></td>
+                <td><code>8.5.0</code></td>
+                <td><code>8.5.0</code></td>
+                <td><strong><code>&gt;=8.5.0</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release 8.5.0 available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/click/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/click/8.5.0/" target="_blank" rel="noopener noreferrer">Release Notes (8.5.0)</a><a class="link-pill" href="https://click.palletsprojects.com/" target="_blank" rel="noopener noreferrer">Official Documentation</a><a class="link-pill" href="https://click.palletsprojects.com/page/changes/" target="_blank" rel="noopener noreferrer">Official Changelog</a><a class="link-pill" href="https://github.com/pallets/click/" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>datetime</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/datetime.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>html</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/html.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>http</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/http.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>idna</code></strong></td>
+                <td><code>2.7</code></td>
+                <td><code>3.20</code></td>
+                <td><strong><code>&gt;=3.20</code></strong></td>
+                <td>
+                    <span class="badge badge-critical">major</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">requires_migration</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Current constraint pins major release v2.x; latest upstream release is v3.x. Evaluate changelog for breaking changes.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/idna/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/idna/3.20/" target="_blank" rel="noopener noreferrer">Release Notes (3.20)</a><a class="link-pill" href="https://github.com/kjd/idna/blob/master/HISTORY.md" target="_blank" rel="noopener noreferrer">Official Changelog</a><a class="link-pill" href="https://github.com/kjd/idna" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>jinja2</code></strong></td>
+                <td><code>2.11.3</code></td>
+                <td><code>3.1.6</code></td>
+                <td><strong><code>&gt;=3.1.4</code></strong></td>
+                <td>
+                    <span class="badge badge-critical">major</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">requires_migration</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Resolves MarkupSafe 3.x soft_unicode compatibility failure and security advisories; breaking changes require template test verification.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/Jinja2/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/jinja2/3.1.6/" target="_blank" rel="noopener noreferrer">Release Notes (3.1.6)</a><a class="link-pill" href="https://jinja.palletsprojects.com/" target="_blank" rel="noopener noreferrer">Official Documentation</a><a class="link-pill" href="https://jinja.palletsprojects.com/changes/" target="_blank" rel="noopener noreferrer">Official Changelog</a><a class="link-pill" href="https://github.com/pallets/jinja/" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>json</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/json.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>linkwatch</code></strong></td>
+                <td><code>Unpinned / Inferred</code></td>
+                <td><code>Unknown — unable to verify</code></td>
+                <td><strong><code>&gt;=Unknown — unable to verify</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release Unknown — unable to verify available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>nose</code></strong></td>
+                <td><code>1.3.7</code></td>
+                <td><code>1.3.7</code></td>
+                <td><strong><code>&gt;=1.3.7</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release 1.3.7 available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/nose/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/nose/1.3.7/" target="_blank" rel="noopener noreferrer">Release Notes (1.3.7)</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>os</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/os.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>pydantic</code></strong></td>
+                <td><code>1.10.13</code></td>
+                <td><code>2.14.1</code></td>
+                <td><strong><code>&gt;=2.7.0</code></strong></td>
+                <td>
+                    <span class="badge badge-critical">major</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">incompatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Manifest conflict: requirements.txt declares strict pin ==1.10.13 while pyproject.toml requires &gt;=2.0. Upgrading to Pydantic v2 resolves cross-manifest divergence.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/pydantic/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/pydantic/2.14.1/" target="_blank" rel="noopener noreferrer">Release Notes (2.14.1)</a><a class="link-pill" href="https://pydantic.dev/docs/validation/latest/get-started/" target="_blank" rel="noopener noreferrer">Official Documentation</a><a class="link-pill" href="https://pydantic.dev/docs/validation/latest/get-started/changelog/" target="_blank" rel="noopener noreferrer">Official Changelog</a><a class="link-pill" href="https://github.com/pydantic/pydantic" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>pytest</code></strong></td>
+                <td><code>9.1.1</code></td>
+                <td><code>9.1.1</code></td>
+                <td><strong><code>&gt;=7.4.0</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Core testing framework with support for modern Python 3.10-3.13 syntax and pytest plugins.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/pytest/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/pytest/9.1.1/" target="_blank" rel="noopener noreferrer">Release Notes (9.1.1)</a><a class="link-pill" href="https://docs.pytest.org/en/stable/changelog.html" target="_blank" rel="noopener noreferrer">Official Changelog</a><a class="link-pill" href="https://github.com/pytest-dev/pytest" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>python-dateutil</code></strong></td>
+                <td><code>2.9.0.post0</code></td>
+                <td><code>2.9.0.post0</code></td>
+                <td><strong><code>&gt;=2.9.0.post0</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release 2.9.0.post0 available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/python-dateutil/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/python-dateutil/2.9.0.post0/" target="_blank" rel="noopener noreferrer">Release Notes (2.9.0.post0)</a><a class="link-pill" href="https://dateutil.readthedocs.io/en/stable/" target="_blank" rel="noopener noreferrer">Official Documentation</a><a class="link-pill" href="https://github.com/dateutil/dateutil" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>re</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/re.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>requests</code></strong></td>
+                <td><code>2.31.0</code></td>
+                <td><code>2.34.2</code></td>
+                <td><strong><code>&gt;=2.34.2</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release 2.34.2 available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/requests/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/requests/2.34.2/" target="_blank" rel="noopener noreferrer">Release Notes (2.34.2)</a><a class="link-pill" href="https://requests.readthedocs.io" target="_blank" rel="noopener noreferrer">Official Documentation</a><a class="link-pill" href="https://github.com/psf/requests" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>rich</code></strong></td>
+                <td><code>15.0.0</code></td>
+                <td><code>15.0.0</code></td>
+                <td><strong><code>&gt;=15.0.0</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release 15.0.0 available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/rich/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/rich/15.0.0/" target="_blank" rel="noopener noreferrer">Release Notes (15.0.0)</a><a class="link-pill" href="https://rich.readthedocs.io/en/latest/" target="_blank" rel="noopener noreferrer">Official Documentation</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>setuptools</code></strong></td>
+                <td><code>75.8.0</code></td>
+                <td><code>84.0.0</code></td>
+                <td><strong><code>&gt;=84.0.0</code></strong></td>
+                <td>
+                    <span class="badge badge-critical">major</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">requires_migration</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Current constraint pins major release v75.x; latest upstream release is v84.x. Evaluate changelog for breaking changes.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/setuptools/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/setuptools/84.0.0/" target="_blank" rel="noopener noreferrer">Release Notes (84.0.0)</a><a class="link-pill" href="https://setuptools.pypa.io/" target="_blank" rel="noopener noreferrer">Official Documentation</a><a class="link-pill" href="https://setuptools.pypa.io/en/stable/history.html" target="_blank" rel="noopener noreferrer">Official Changelog</a><a class="link-pill" href="https://github.com/pypa/setuptools" target="_blank" rel="noopener noreferrer">Source Repository</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>six</code></strong></td>
+                <td><code>1.17.0</code></td>
+                <td><code>1.17.0</code></td>
+                <td><strong><code>prune (Python 3 native)</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Python 2/3 compatibility shim no longer imported by project application code; can be safely pruned to reduce attack surface.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/six/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/six/1.17.0/" target="_blank" rel="noopener noreferrer">Release Notes (1.17.0)</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>socket</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/socket.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>threading</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/threading.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>time</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/time.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>toml</code></strong></td>
+                <td><code>0.10.2</code></td>
+                <td><code>0.10.2</code></td>
+                <td><strong><code>&gt;=0.10.2</code></strong></td>
+                <td>
+                    <span class="badge badge-medium">minor</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">likely_compatible</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Upstream release 0.10.2 available. Safe minor or patch update recommended.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://pypi.org/project/toml/" target="_blank" rel="noopener noreferrer">PyPI Package Page</a><a class="link-pill" href="https://pypi.org/project/toml/0.10.2/" target="_blank" rel="noopener noreferrer">Release Notes (0.10.2)</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            <tr>
+                <td><strong><code>typing</code></strong></td>
+                <td><code>Built-in (Python stdlib)</code></td>
+                <td><code>Built-in</code></td>
+                <td><strong><code>Built-in</code></strong></td>
+                <td>
+                    <span class="badge badge-info">none</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">built-in</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.</div>
+                    <div class="link-list" style="margin-top: 4px;"><a class="link-pill" href="https://docs.python.org/3/library/typing.html" target="_blank" rel="noopener noreferrer">Python Standard Library Documentation</a><a class="link-pill" href="https://docs.python.org/3/" target="_blank" rel="noopener noreferrer">Python Official Reference</a></div>
+                </td>
+                <td><span class="badge badge-cat">NOT_ATTEMPTED</span></td>
+            </tr>
+            
+            </tbody>
+        </table>
+        
         </section>
 
         <section>
@@ -270,12 +759,21 @@
 
         
 
+        <section><h2>Empirical Test Verification &amp; Sandbox Results</h2>
+            <div class="verif-section">
+                <h4>Baseline Test Results (Original Target Environment)</h4>
+                <p>Command: <code>C:\Users\vijay\OneDrive\Desktop\MEND-Hackathon\LinkWatch\.venv\Scripts\python.exe -m pytest -v</code> | Exit Code: <span class="badge badge-danger">1</span></p>
+                <p>Summary: 9 passed, 1 failed, 0 errors in 9.74s</p>
+            </div>
+            </section>
+
         <section>
-            <h2>Artifact Integrity & Fingerprints</h2>
+            <h2>Artifact Integrity &amp; Provenance Fingerprints</h2>
             <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; font-size: 0.85rem;">
-                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>e640c60652e25d068ef8879c2a7a3d9f7388758c4fecf0c757e2a849c8d6cedb</code></p>
-                <p style="margin: 0 0 0.5rem 0;"><strong>Target Source Snapshot SHA-256:</strong> <code>1d6112f21ce5ddb7f235a5bc002e810151f8f447d6e09332d908001c25c23c4a</code></p>
-                <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Disclaimer:</strong> SHA-256 digest provides tamper-evident integrity of the serialized export audit record. A hash is not proof of truth, authorship, runtime correctness, or complete security.</p>
+                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>26b2b7fe0ac79bc358767c3d4de85d9af987127f59b64ffcfd776154f43849c6</code></p>
+                <p style="margin: 0 0 0.5rem 0;"><strong>Target Manifest Snapshot SHA-256:</strong> <code>1d6112f21ce5ddb7f235a5bc002e810151f8f447d6e09332d908001c25c23c4a</code></p>
+                <p style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.78rem;"><strong>Hash Coverage:</strong> Deterministic digest over sorted, normalized manifest declarations (e.g., <code>requirements.txt</code>, <code>pyproject.toml</code>). Detects any addition, removal, or modification of declared dependencies.</p>
+                <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Integrity Note:</strong> SHA-256 digest provides tamper-evident integrity of the serialized export audit record. A hash is not proof of truth, authorship, runtime correctness, or complete security.</p>
             </div>
         </section>
 

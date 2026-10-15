@@ -7,7 +7,7 @@
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-green?style=flat-square)](#)
 [![AI Model](https://img.shields.io/badge/AI%20Model-gemma4%3Ae2b--it--q4__K__M-purple?style=flat-square)](#)
 [![Local Inference](https://img.shields.io/badge/Inference-Ollama%20Local%20(100%25%20Offline)-orange?style=flat-square)](#)
-[![Tests Passing](https://img.shields.io/badge/MEND%20Tests-25%2F25%20Passed-brightgreen?style=flat-square)](#)
+[![Tests Passing](https://img.shields.io/badge/MEND%20Tests-33%2F33%20Passed-brightgreen?style=flat-square)](#)
 [![Multi-Repo](https://img.shields.io/badge/Multi--Repo-Supported-blue?style=flat-square)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
@@ -27,7 +27,8 @@ Traditional security tools focus exclusively on known CVE databases. However, re
 7. Emits auditable, versioned **Dependency Exit Capsules** (JSON schema `1.0.0` and standalone zero-dependency HTML) separated by repository identity and revision.
 8. Maintains an auditable **Migration Integrity Ledger** tracking dependencies across strict lifecycle states: `OBSERVED → RECOMMENDED → EXECUTED → VERIFIED / FAILED / INCONCLUSIVE`.
 9. Provides **On-Demand Scan Drift Comparison** to detect manifest, AST, and dependency changes between scan snapshots.
-
+10. Delivers a **Side-by-Side Dependency Intelligence Matrix** comparing current versions against PyPI latest stable releases with official clickable evidence links (PyPI, Release Notes, Docs, Changelogs).
+11. Features a **Technical Dark/Light Theme** with black/charcoal surfaces, electric-blue accents, and red/amber risk indicators.
 
 ---
 
@@ -91,14 +92,29 @@ MEND implements an evidence-backed lifecycle state machine for every dependency:
 - **VERIFIED / FAILED**: Determined strictly by empirical pytest exit codes and failure counts.
 - **Rule**: Recommendations are *never* labeled as verified prior to real sandbox test execution.
 
-### 3.2 Artifact Integrity & Cryptographic SHA-256 Fingerprints
-- Target repository source snapshots are hashed deterministically via SHA-256 across all discovered manifests and Python files.
-- Exported Dependency Exit Capsules (JSON and HTML) embed SHA-256 digests ensuring tamper-evident immutability for CI/CD compliance pipelines.
+### 3.2 Manifest Snapshot SHA-256 & Cryptographic Tamper-Evident Fingerprints
+- **Exact Hash Coverage**: The `Manifest Snapshot SHA-256` digest covers sorted, normalized dependency manifest declarations (e.g., `requirements.txt`, `pyproject.toml`, `package.json`).
+- **Tamper-Evident Audit Guarantee**: Any addition, removal, or modification of declared dependencies or version constraints alters the digest immediately.
+- **Explicit Scope Limitation**: The manifest snapshot digest covers declared dependency inputs. It is not an SHA-256 hash of the entire source code tree or binary assets.
+- Exported Dependency Exit Capsules (JSON and HTML) embed both payload SHA-256 and manifest snapshot SHA-256 digests ensuring tamper-evident immutability for CI/CD compliance pipelines.
 - **Integrity Limits & Disclaimer**: A SHA-256 hash guarantees export record immutability and tamper-detection. It is not cryptographic proof of external package trustworthiness, runtime safety, or code authorship.
 
 ### 3.3 On-Demand Scan Drift Comparison (`/api/scan/diff`)
 - Developers and judges can trigger on-demand snapshot drift comparisons without claiming automated continuous background monitoring.
-- Compares: added/removed packages, modified version specifiers, AST usage changes, manifest conflict introductions/resolutions, and source SHA-256 changes with honest timestamps.
+- Compares: added/removed packages, modified version specifiers, AST usage changes, manifest conflict introductions/resolutions, and manifest snapshot SHA-256 changes with honest timestamps.
+
+### 3.4 Candidate Runner Safety Boundaries
+- **Target Immutability**: LinkWatch source files and virtual environment are strictly read-only.
+- **Filesystem & Environment Isolation**: Candidate experiments run in temporary clones with overridden `PYTHONPATH` prioritizing the candidate package override tree.
+- **Command Control**: Parameters are strictly validated via regex (`^[a-zA-Z0-9_\-\.\[\]><=~! ]+$`); execution uses explicit parameter lists without `shell=True`.
+- **Resource Limits**: 60s pytest timeout, 90s pip timeout, 250KB output cap, and automatic retention limit pruning to the 5 most recent sandboxes.
+- **Sandbox Boundary Notice**: The sandbox isolates file modifications and environment overrides. It runs with host user permissions and is not a kernel-level container or VM.
+
+### 3.5 Side-by-Side Dependency Intelligence Matrix & Official Links
+- **Side-by-Side Comparison**: Direct side-by-side view contrasting canonical package names, declared and resolved versions, verified latest stable releases from PyPI, and recommended migration targets.
+- **Severity & Compatibility**: Explicitly classified as `major`, `minor`, `patch`, or `none`, with compatibility indicators (`compatible`, `likely_compatible`, `requires_migration`, `incompatible`).
+- **Official Clickable Sources**: Real clickable links directly to PyPI project pages, official release notes, documentation, changelogs, and upstream source repositories.
+- **Resilience**: Backed by live PyPI JSON API with timeout bounds and built-in offline baselines, ensuring uninterrupted operation in air-gapped evaluation environments.ed packages, modified version specifiers, AST usage changes, manifest conflict introductions/resolutions, and source SHA-256 changes with honest timestamps.
 
 ### 3.4 Candidate Runner Safety Boundaries
 - **Target Immutability**: LinkWatch source files and virtual environment are strictly read-only.

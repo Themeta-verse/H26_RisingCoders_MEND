@@ -238,6 +238,26 @@ interface SystemStatus {
   };
 }
 
+export interface DependencyIntelligenceItem {
+  package_name: string;
+  ecosystem: string;
+  current_version: string;
+  latest_stable_version: string;
+  recommended_target: string;
+  version_difference: string;
+  release_status: string;
+  compatibility: string;
+  change_severity: 'major' | 'minor' | 'patch' | 'none' | 'unknown';
+  reason: string;
+  official_links: Array<{
+    title: string;
+    url: string;
+    category?: string;
+  }>;
+  verification_status: string;
+  metadata_source: string;
+}
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'inventory' | 'rules' | 'recommendations' | 'verification' | 'ledger' | 'capsule'>('inventory');
   
@@ -260,7 +280,13 @@ export const App: React.FC = () => {
   const [ledgerData, setLedgerData] = useState<LedgerData | null>(null);
   const [integrityData, setIntegrityData] = useState<IntegrityData | null>(null);
   const [driftData, setDriftData] = useState<DriftData | null>(null);
-  
+  const [intelligenceData, setIntelligenceData] = useState<DependencyIntelligenceItem[]>([]);
+  const [inventorySubView, setInventorySubView] = useState<'manifest' | 'intelligence'>('manifest');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('mend_theme');
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+  });
+
   // UI states
   const loadSequenceRef = useRef<number>(0);
   const [modalError, setModalError] = useState<string | null>(null);
@@ -276,6 +302,12 @@ export const App: React.FC = () => {
   const [isDriftModalOpen, setIsDriftModalOpen] = useState<boolean>(false);
   const [loadingDrift, setLoadingDrift] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Sync theme attribute with document root
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('mend_theme', theme);
+  }, [theme]);
 
   // Initial fetch
   useEffect(() => {
@@ -364,6 +396,11 @@ export const App: React.FC = () => {
       if (loadSequenceRef.current !== currentSeq) return;
       setIntegrityData(integJson);
 
+      // 9. Fetch dependency intelligence with latest PyPI verified metadata
+      const intelData = await safeFetchJson<DependencyIntelligenceItem[]>('/api/dependency-intelligence', []);
+      if (loadSequenceRef.current !== currentSeq) return;
+      setIntelligenceData(intelData || []);
+
     } catch (err: any) {
       if (loadSequenceRef.current === currentSeq) {
         console.error('Failed to load initial data:', err);
@@ -395,6 +432,7 @@ export const App: React.FC = () => {
     setLedgerData(null);
     setIntegrityData(null);
     setDriftData(null);
+    setIntelligenceData([]);
     setSelectedDep(null);
     setSelectedLedgerPkg(null);
 
@@ -648,28 +686,40 @@ export const App: React.FC = () => {
     return true;
   });
 
+  const filteredIntelligence = intelligenceData.filter(item => {
+    return item.package_name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
   const criticalFindingsCount = ruleFindings.filter(f => f.severity === 'Critical').length;
   const highFindingsCount = ruleFindings.filter(f => f.severity === 'High').length;
   const verifiedFixesCount = candidateVerifications.filter(c => c.status === 'VERIFIED_FIX').length;
 
   return (
-    <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '32px 24px', backgroundColor: '#ffffff', minHeight: '100vh' }}>
+    <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '32px 24px', backgroundColor: 'var(--canvas)', minHeight: '100vh' }}>
       
       {/* Editorial Header */}
       <header style={{ borderBottom: '1px solid var(--border)', paddingBottom: '20px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text-black)' }}>
                 MEND
               </span>
               <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                Migration Evidence & Dependency Navigator
+                Migration Evidence &amp; Dependency Navigator
               </span>
               <span className="badge badge-info" style={{ fontWeight: 600 }}>Track 1: Gemma 4 — Dependency Resilience</span>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+                title="Toggle Dark / Light Theme"
+                style={{ padding: '2px 8px', fontSize: '0.72rem', fontWeight: 600 }}
+              >
+                {theme === 'dark' ? '☀ Light Theme' : '🌙 Dark Theme'}
+              </button>
             </div>
             <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Deterministic manifest & AST evidence engine with local Gemma 4 advisory and sandbox verification.
+              Deterministic manifest &amp; AST evidence engine with local Gemma 4 advisory and sandbox verification.
             </p>
           </div>
 
@@ -835,8 +885,8 @@ export const App: React.FC = () => {
           </div>
           <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--border)' }} />
           <div>
-            <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Source SHA-256</span>
-            <div className="mono" style={{ fontWeight: 600, color: 'var(--text-black)', fontSize: '0.75rem' }} title={integrityData?.source_snapshot_sha256}>
+            <span style={{ color: 'var(--text-muted)', textTransform: 'uppercase', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>Manifest Snapshot SHA-256</span>
+            <div className="mono" style={{ fontWeight: 600, color: 'var(--text-black)', fontSize: '0.75rem', cursor: 'help' }} title={integrityData?.source_snapshot_sha256 ? `${integrityData.source_snapshot_sha256}\n\nCoverage: Deterministic digest over sorted, normalized manifest declarations (e.g. requirements.txt, pyproject.toml). Tamper-evident audit record.` : 'Manifest Snapshot SHA-256 Digest'}>
               {loading
                 ? 'Calculating...'
                 : (integrityData?.source_snapshot_sha256
@@ -947,112 +997,281 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Primary Table */}
-          <div className="panel" style={{ overflow: 'hidden' }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '22%' }}>Package</th>
-                  <th style={{ width: '14%' }}>pyproject.toml</th>
-                  <th style={{ width: '15%' }}>requirements.txt</th>
-                  <th style={{ width: '13%' }}>Installed (.venv)</th>
-                  <th style={{ width: '12%' }}>Code Usages</th>
-                  <th style={{ width: '12%' }}>Status</th>
-                  <th style={{ width: '12%', textAlign: 'right' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredDeps.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
-                      No dependencies match the current filter.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredDeps.map(dep => {
-                    const pyprojectDecl = dep.manifest_declarations.find(d => d.manifest_file === 'pyproject.toml');
-                    const reqDecl = dep.manifest_declarations.find(d => d.manifest_file === 'requirements.txt');
-                    const isSelected = selectedDep?.name === dep.name;
-
-                    return (
-                      <tr
-                        key={dep.name}
-                        className={isSelected ? 'selected' : ''}
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => setSelectedDep(dep)}
-                      >
-                        <td style={{ fontWeight: 600 }}>
-                          <span className="mono" style={{ color: 'var(--text-black)' }}>{dep.name}</span>
-                        </td>
-                        <td>
-                          {pyprojectDecl ? (
-                            <code className="code-inline">{pyprojectDecl.specifier || '*'}</code>
-                          ) : (
-                            <span style={{ color: 'var(--text-faint)' }}>—</span>
-                          )}
-                        </td>
-                        <td>
-                          {reqDecl ? (
-                            <code className="code-inline">{reqDecl.specifier || '*'}</code>
-                          ) : (
-                            <span style={{ color: 'var(--text-faint)' }}>—</span>
-                          )}
-                        </td>
-                        <td>
-                          {dep.installed_version ? (
-                            <code className="code-inline">{dep.installed_version}</code>
-                          ) : (
-                            <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Not in venv</span>
-                          )}
-                        </td>
-                        <td>
-                          {dep.direct_imports.length > 0 ? (
-                            <span style={{ fontWeight: 500 }}>{dep.direct_imports.length} imports</span>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)' }}>0 imports</span>
-                          )}
-                        </td>
-                        <td>
-                          {dep.is_manifest_conflicted ? (
-                            <span className="badge badge-high">Conflict</span>
-                          ) : dep.name.toLowerCase() === 'jinja2' ? (
-                            <span className="badge badge-critical">Fails Baseline</span>
-                          ) : !dep.is_direct_usage && dep.manifest_declarations.length > 0 ? (
-                            <span className="badge badge-neutral">Zombie</span>
-                          ) : (
-                            <span className="badge badge-success">Consistent</span>
-                          )}
-                        </td>
-                        <td style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedDep(dep);
-                              }}
-                            >
-                              Inspect
-                            </button>
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRequestRecommendation(dep.name);
-                              }}
-                              disabled={!!actionLoading}
-                            >
-                              Ask Gemma
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+          {/* Sub-view switcher: Manifest Declarations vs Side-by-Side Version Intelligence */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: 'var(--canvas-subtle)', padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Inventory View:
+              </span>
+              <button
+                className={`btn btn-sm ${inventorySubView === 'manifest' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setInventorySubView('manifest')}
+                style={{ fontSize: '0.75rem' }}
+              >
+                Manifest &amp; Usage Inventory
+              </button>
+              <button
+                className={`btn btn-sm ${inventorySubView === 'intelligence' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setInventorySubView('intelligence')}
+                style={{ fontSize: '0.75rem' }}
+              >
+                Side-by-Side Version Intelligence ({intelligenceData.length})
+              </button>
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+              {inventorySubView === 'manifest'
+                ? 'Manifest-declared packages, AST usage locations, and lock-file versions'
+                : 'PyPI registry verified versions, recommended targets, compatibility severity & official links'}
+            </div>
           </div>
+
+          {/* Primary Table: Manifest & Usage Inventory */}
+          {inventorySubView === 'manifest' && (
+            <div className="panel" style={{ overflow: 'hidden' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '22%' }}>Package</th>
+                    <th style={{ width: '14%' }}>pyproject.toml</th>
+                    <th style={{ width: '15%' }}>requirements.txt</th>
+                    <th style={{ width: '13%' }}>Installed (.venv)</th>
+                    <th style={{ width: '12%' }}>Code Usages</th>
+                    <th style={{ width: '12%' }}>Status</th>
+                    <th style={{ width: '12%', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDeps.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                        No dependencies match the current filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDeps.map(dep => {
+                      const pyprojectDecl = dep.manifest_declarations.find(d => d.manifest_file === 'pyproject.toml');
+                      const reqDecl = dep.manifest_declarations.find(d => d.manifest_file === 'requirements.txt');
+                      const isSelected = selectedDep?.name === dep.name;
+
+                      return (
+                        <tr
+                          key={dep.name}
+                          className={isSelected ? 'selected' : ''}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setSelectedDep(dep)}
+                        >
+                          <td style={{ fontWeight: 600 }}>
+                            <span className="mono" style={{ color: 'var(--text-black)' }}>{dep.name}</span>
+                          </td>
+                          <td>
+                            {pyprojectDecl ? (
+                              <code className="code-inline">{pyprojectDecl.specifier || '*'}</code>
+                            ) : (
+                              <span style={{ color: 'var(--text-faint)' }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            {reqDecl ? (
+                              <code className="code-inline">{reqDecl.specifier || '*'}</code>
+                            ) : (
+                              <span style={{ color: 'var(--text-faint)' }}>—</span>
+                            )}
+                          </td>
+                          <td>
+                            {dep.installed_version ? (
+                              <code className="code-inline">{dep.installed_version}</code>
+                            ) : (
+                              <span style={{ color: 'var(--text-faint)', fontSize: '0.75rem' }}>Not in venv</span>
+                            )}
+                          </td>
+                          <td>
+                            {dep.direct_imports.length > 0 ? (
+                              <span style={{ fontWeight: 500 }}>{dep.direct_imports.length} imports</span>
+                            ) : (
+                              <span style={{ color: 'var(--text-muted)' }}>0 imports</span>
+                            )}
+                          </td>
+                          <td>
+                            {dep.is_manifest_conflicted ? (
+                              <span className="badge badge-high">Conflict</span>
+                            ) : dep.name.toLowerCase() === 'jinja2' ? (
+                              <span className="badge badge-critical">Fails Baseline</span>
+                            ) : !dep.is_direct_usage && dep.manifest_declarations.length > 0 ? (
+                              <span className="badge badge-neutral">Zombie</span>
+                            ) : (
+                              <span className="badge badge-success">Consistent</span>
+                            )}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedDep(dep);
+                                }}
+                              >
+                                Inspect
+                              </button>
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRequestRecommendation(dep.name);
+                                }}
+                                disabled={!!actionLoading}
+                              >
+                                Ask Gemma
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Side-by-Side Version Intelligence & Risk Analysis Table */}
+          {inventorySubView === 'intelligence' && (
+            <div className="panel" style={{ overflow: 'hidden' }}>
+              <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)', background: 'var(--canvas-subtle)', fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <strong>Dependency Intelligence Matrix:</strong> Live PyPI official release metadata cross-referenced against repository constraints. Click official links for release notes and documentation.
+                </div>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={async () => {
+                    setActionLoading('Refreshing PyPI registry metadata for all dependencies...');
+                    try {
+                      const fresh = await safeFetchJson<DependencyIntelligenceItem[]>('/api/dependency-intelligence?refresh=true', []);
+                      setIntelligenceData(fresh);
+                    } catch (e: any) {
+                      setErrorMsg(`Failed to refresh version intelligence: ${e.message}`);
+                    } finally {
+                      setActionLoading(null);
+                    }
+                  }}
+                  disabled={!!actionLoading}
+                  style={{ fontSize: '0.7rem', padding: '2px 8px' }}
+                >
+                  Force Registry Refresh
+                </button>
+              </div>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '13%' }}>Package</th>
+                    <th style={{ width: '10%' }}>Current</th>
+                    <th style={{ width: '11%' }}>Latest Stable</th>
+                    <th style={{ width: '13%' }}>Recommended Target</th>
+                    <th style={{ width: '12%' }}>Severity &amp; Compat</th>
+                    <th style={{ width: '27%' }}>Reason &amp; Official Evidence Links</th>
+                    <th style={{ width: '14%', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredIntelligence.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                        {intelligenceData.length === 0 ? 'Loading dependency intelligence records...' : 'No packages match the current filter.'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredIntelligence.map(item => {
+                      const sevBadgeClass = item.change_severity === 'major'
+                        ? 'badge-critical'
+                        : item.change_severity === 'minor'
+                        ? 'badge-high'
+                        : item.change_severity === 'patch'
+                        ? 'badge-low'
+                        : 'badge-neutral';
+
+                      const verifBadgeClass = item.verification_status === 'VERIFIED_FIX'
+                        ? 'badge-success'
+                        : item.verification_status.includes('FAIL')
+                        ? 'badge-critical'
+                        : 'badge-neutral';
+
+                      return (
+                        <tr key={item.package_name}>
+                          <td style={{ fontWeight: 600 }}>
+                            <div className="mono" style={{ color: 'var(--text-black)' }}>{item.package_name}</div>
+                            <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>{item.ecosystem}</div>
+                          </td>
+                          <td>
+                            <code className="code-inline">{item.current_version}</code>
+                          </td>
+                          <td>
+                            <code className="code-inline" style={{ fontWeight: 600 }}>{item.latest_stable_version}</code>
+                            {item.release_status && (
+                              <div style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>{item.release_status}</div>
+                            )}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <strong className="mono" style={{ color: 'var(--cobalt)' }}>{item.recommended_target}</strong>
+                            </div>
+                            <div style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)' }}>
+                              {item.version_difference}
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`badge ${sevBadgeClass}`}>{item.change_severity}</span>
+                            <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '3px' }}>
+                              {item.compatibility}
+                            </div>
+                            <div style={{ marginTop: '4px' }}>
+                              <span className={`badge ${verifBadgeClass}`} style={{ fontSize: '0.625rem' }}>
+                                {item.verification_status}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', marginBottom: '6px', lineHeight: 1.35 }}>
+                              {item.reason}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {item.official_links && item.official_links.map((link, idx) => (
+                                <a key={idx} className="link-pill" href={link.url} target="_blank" rel="noopener noreferrer">
+                                  {link.title}
+                                </a>
+                              ))}
+                            </div>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                              {item.recommended_target && item.recommended_target !== item.current_version && !item.recommended_target.includes('N/A') && (
+                                <button
+                                  className="btn btn-success btn-sm"
+                                  onClick={() => handleRunVerification(item.package_name, item.recommended_target)}
+                                  disabled={!!actionLoading}
+                                  title={`Execute isolated candidate sandbox verification for ${item.package_name} == ${item.recommended_target}`}
+                                  style={{ fontSize: '0.7rem', padding: '2px 6px' }}
+                                >
+                                  Verify Fix
+                                </button>
+                              )}
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                onClick={() => handleRequestRecommendation(item.package_name)}
+                                disabled={!!actionLoading}
+                                style={{ fontSize: '0.7rem', padding: '2px 6px' }}
+                              >
+                                Ask Gemma
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Structured Inspection View Drawer */}
           {selectedDep && (

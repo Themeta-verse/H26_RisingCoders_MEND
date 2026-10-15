@@ -46,6 +46,7 @@ from mend.core.model_client import GemmaModelClient, MigrationRecommendation
 from mend.core.repository_manager import RepositoryManager, RepositorySession
 from mend.core.rules import RuleEngine, RuleFinding
 from mend.core.scanner import DependencyScanner, RepositoryScanResult, diff_scans
+from mend.core.version_service import DependencyIntelligenceService
 
 app = FastAPI(
     title="MEND API",
@@ -263,6 +264,30 @@ def get_scan_diff(target_path: Optional[str] = None, refresh: bool = False):
 
     old_scan = session.previous_scan if session.previous_scan is not None else session.cached_scan
     return diff_scans(old_scan, session.cached_scan)
+
+
+# ---------------------------------------------------------------------------
+# Dependency Intelligence & Version Comparison
+# ---------------------------------------------------------------------------
+
+@app.get("/api/dependency-intelligence")
+def get_dependency_intelligence(refresh: bool = False):
+    """Retrieve side-by-side version comparison against official package registries
+    with clickable official links, compatibility severity, and verification status."""
+    session = repo_manager.get_active_session()
+    if session.cached_scan is None or refresh:
+        scan_repository(refresh=refresh)
+
+    if session.cached_intelligence is None or refresh:
+        svc = DependencyIntelligenceService()
+        rep = svc.analyze_repository(
+            dependencies=session.cached_scan.dependencies,
+            candidate_verifications=session.cached_candidate_verifications,
+            ecosystem=session.detection.display_name,
+        )
+        session.cached_intelligence = list(rep["items"].values())
+
+    return session.cached_intelligence
 
 
 # ---------------------------------------------------------------------------

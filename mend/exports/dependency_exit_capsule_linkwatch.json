@@ -1,7 +1,7 @@
 {
   "$schema_version": "1.0.0",
-  "capsule_id": "CAPSULE-LINKWATCH-1792062916",
-  "generated_at": "2026-10-15T11:15:16.555445+00:00",
+  "capsule_id": "CAPSULE-LINKWATCH-1792064958",
+  "generated_at": "2026-10-15T11:49:18.719664+00:00",
   "target": {
     "name": "LinkWatch",
     "path": "C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch",
@@ -1207,14 +1207,14 @@
       "command_executed": "C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Scripts\\python.exe -m pytest -v",
       "cwd": "C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch",
       "exit_code": 1,
-      "duration_seconds": 9.33,
-      "timestamp": "2026-10-15T11:15:07.218935+00:00",
+      "duration_seconds": 9.74,
+      "timestamp": "2026-10-15T11:48:58.116362+00:00",
       "total_tests": 10,
       "passed_tests": 9,
       "failed_tests": 1,
       "skipped_tests": 0,
       "error_count": 0,
-      "raw_stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Scripts\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\nconfigfile: pyproject.toml\ntestpaths: tests\ncollecting ... collected 10 items\n\ntests/test_cache.py::test_cache_round_trip PASSED                        [ 10%]\ntests/test_checker.py::test_ok_is_up PASSED                              [ 20%]\ntests/test_checker.py::test_missing_is_down PASSED                       [ 30%]\ntests/test_checker.py::test_redirect_is_up PASSED                        [ 40%]\ntests/test_checker.py::test_slow_is_up PASSED                            [ 50%]\ntests/test_checker.py::test_closed_port_is_down PASSED                   [ 60%]\ntests/test_checker.py::test_latin1_title PASSED                          [ 70%]\ntests/test_checker.py::test_user_agent PASSED                            [ 80%]\ntests/test_config.py::test_sites_file_loads PASSED                       [ 90%]\ntests/test_report.py::test_report_renders_all_sites FAILED               [100%]\n\n================================== FAILURES ===================================\n________________________ test_report_renders_all_sites ________________________\n\ntmp_path = WindowsPath('C:/Users/vijay/AppData/Local/Temp/pytest-of-Himanshu/pytest-76/test_report_renders_all_sites0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002D774AAA630>\n\n    def test_report_renders_all_sites(tmp_path, monkeypatch):\n        monkeypatch.setenv(\"LINKWATCH_CACHE_DIR\", str(tmp_path))\n        cache.save_results(RESULTS)\n        output = tmp_path / \"status.html\"\n>       result = CliRunner().invoke(cli, [\"report\", \"-o\", str(output)], catch_exceptions=False)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_report.py:20: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n.venv\\Lib\\site-packages\\click\\testing.py:687: in invoke\n    return_value = cli.main(args=args or (), prog_name=prog_name, **extra)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1552: in main\n    rv = self.invoke(ctx)\n         ^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:2032: in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1415: in invoke\n    return ctx.invoke(self.callback, **ctx.params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:910: in invoke\n    return callback(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\nlinkwatch\\cli.py:56: in report\n    from .report import render_report\nlinkwatch\\report.py:3: in <module>\n    from jinja2 import Environment, FileSystemLoader, select_autoescape\n.venv\\Lib\\site-packages\\jinja2\\__init__.py:12: in <module>\n    from .environment import Environment\n.venv\\Lib\\site-packages\\jinja2\\environment.py:25: in <module>\n    from .defaults import BLOCK_END_STRING\n.venv\\Lib\\site-packages\\jinja2\\defaults.py:3: in <module>\n    from .filters import FILTERS as DEFAULT_FILTERS  # noqa: F401\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n    # -*- coding: utf-8 -*-\n    \"\"\"Built-in template filters used with the ``|`` operator.\"\"\"\n    import math\n    import random\n    import re\n    import warnings\n    from collections import namedtuple\n    from itertools import chain\n    from itertools import groupby\n    \n    from markupsafe import escape\n    from markupsafe import Markup\n>   from markupsafe import soft_unicode\nE   ImportError: cannot import name 'soft_unicode' from 'markupsafe' (C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Lib\\site-packages\\markupsafe\\__init__.py)\n\n.venv\\Lib\\site-packages\\jinja2\\filters.py:13: ImportError\n============================== warnings summary ===============================\nlinkwatch\\resources.py:1\n  C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\linkwatch\\resources.py:1: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html\n    import pkg_resources\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED tests/test_report.py::test_report_renders_all_sites - ImportError: can...\n=================== 1 failed, 9 passed, 1 warning in 8.60s ====================\n",
+      "raw_stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Scripts\\python.exe\ncachedir: .pytest_cache\nrootdir: C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\nconfigfile: pyproject.toml\ntestpaths: tests\ncollecting ... collected 10 items\n\ntests/test_cache.py::test_cache_round_trip PASSED                        [ 10%]\ntests/test_checker.py::test_ok_is_up PASSED                              [ 20%]\ntests/test_checker.py::test_missing_is_down PASSED                       [ 30%]\ntests/test_checker.py::test_redirect_is_up PASSED                        [ 40%]\ntests/test_checker.py::test_slow_is_up PASSED                            [ 50%]\ntests/test_checker.py::test_closed_port_is_down PASSED                   [ 60%]\ntests/test_checker.py::test_latin1_title PASSED                          [ 70%]\ntests/test_checker.py::test_user_agent PASSED                            [ 80%]\ntests/test_config.py::test_sites_file_loads PASSED                       [ 90%]\ntests/test_report.py::test_report_renders_all_sites FAILED               [100%]\n\n================================== FAILURES ===================================\n________________________ test_report_renders_all_sites ________________________\n\ntmp_path = WindowsPath('C:/Users/vijay/AppData/Local/Temp/pytest-of-Himanshu/pytest-96/test_report_renders_all_sites0')\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000002EA9D1AA3F0>\n\n    def test_report_renders_all_sites(tmp_path, monkeypatch):\n        monkeypatch.setenv(\"LINKWATCH_CACHE_DIR\", str(tmp_path))\n        cache.save_results(RESULTS)\n        output = tmp_path / \"status.html\"\n>       result = CliRunner().invoke(cli, [\"report\", \"-o\", str(output)], catch_exceptions=False)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\ntests\\test_report.py:20: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n.venv\\Lib\\site-packages\\click\\testing.py:687: in invoke\n    return_value = cli.main(args=args or (), prog_name=prog_name, **extra)\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1552: in main\n    rv = self.invoke(ctx)\n         ^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:2032: in invoke\n    return _process_result(sub_ctx.command.invoke(sub_ctx))\n                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:1415: in invoke\n    return ctx.invoke(self.callback, **ctx.params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n.venv\\Lib\\site-packages\\click\\core.py:910: in invoke\n    return callback(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\nlinkwatch\\cli.py:56: in report\n    from .report import render_report\nlinkwatch\\report.py:3: in <module>\n    from jinja2 import Environment, FileSystemLoader, select_autoescape\n.venv\\Lib\\site-packages\\jinja2\\__init__.py:12: in <module>\n    from .environment import Environment\n.venv\\Lib\\site-packages\\jinja2\\environment.py:25: in <module>\n    from .defaults import BLOCK_END_STRING\n.venv\\Lib\\site-packages\\jinja2\\defaults.py:3: in <module>\n    from .filters import FILTERS as DEFAULT_FILTERS  # noqa: F401\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\n    # -*- coding: utf-8 -*-\n    \"\"\"Built-in template filters used with the ``|`` operator.\"\"\"\n    import math\n    import random\n    import re\n    import warnings\n    from collections import namedtuple\n    from itertools import chain\n    from itertools import groupby\n    \n    from markupsafe import escape\n    from markupsafe import Markup\n>   from markupsafe import soft_unicode\nE   ImportError: cannot import name 'soft_unicode' from 'markupsafe' (C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\.venv\\Lib\\site-packages\\markupsafe\\__init__.py)\n\n.venv\\Lib\\site-packages\\jinja2\\filters.py:13: ImportError\n============================== warnings summary ===============================\nlinkwatch\\resources.py:1\n  C:\\Users\\vijay\\OneDrive\\Desktop\\MEND-Hackathon\\LinkWatch\\linkwatch\\resources.py:1: DeprecationWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html\n    import pkg_resources\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED tests/test_report.py::test_report_renders_all_sites - ImportError: can...\n=================== 1 failed, 9 passed, 1 warning in 8.62s ====================\n",
       "raw_stderr": "",
       "failures": [
         {
@@ -1235,9 +1235,983 @@
     "Candidate verification executed in isolated sandbox virtualenvs with system packages.",
     "AI-generated migration steps must be reviewed by engineers prior to deployment."
   ],
+  "dependency_intelligence": [
+    {
+      "package_name": "appdirs",
+      "normalized_name": "appdirs",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "1.4.4",
+      "current_declared": "==1.4.4 (requirements.txt), ==1.4.4 (pyproject.toml)",
+      "current_installed": "1.4.4",
+      "latest_stable_version": "1.4.4",
+      "recommended_target": "platformdirs>=3.0.0",
+      "version_difference": "==1.4.4 -> platformdirs>=3.0.0 (Major Update)",
+      "release_status": "deprecated",
+      "compatibility": "requires_migration",
+      "change_severity": "major",
+      "reason": "appdirs has been unmaintained since 2020. platformdirs is the active, backwards-compatible community-maintained successor.",
+      "evidence_source": "Official PyPI JSON API (1.4.4)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/appdirs/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (1.4.4)",
+          "url": "https://pypi.org/project/appdirs/1.4.4/",
+          "category": "release"
+        }
+      ],
+      "source_location": "requirements.txt:2, pyproject.toml:14",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "certifi",
+      "normalized_name": "certifi",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "2026.7.22",
+      "current_declared": "Unpinned / Inferred",
+      "current_installed": "2026.7.22",
+      "latest_stable_version": "2026.7.22",
+      "recommended_target": ">=2026.7.22",
+      "version_difference": "Unpinned -> >=2026.7.22 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release 2026.7.22 available. Safe minor or patch update recommended.",
+      "evidence_source": "Official PyPI JSON API (2026.7.22)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/certifi/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (2026.7.22)",
+          "url": "https://pypi.org/project/certifi/2026.7.22/",
+          "category": "release"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/certifi/python-certifi",
+          "category": "source"
+        }
+      ],
+      "source_location": "Inferred from AST",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "chardet",
+      "normalized_name": "chardet",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "5.2.0",
+      "current_declared": "==5.2.0 (requirements.txt), ==5.2.0 (pyproject.toml)",
+      "current_installed": "5.2.0",
+      "latest_stable_version": "7.6.0",
+      "recommended_target": ">=7.6.0",
+      "version_difference": "==5.2.0 -> >=7.6.0 (Major Update)",
+      "release_status": "stable",
+      "compatibility": "requires_migration",
+      "change_severity": "major",
+      "reason": "Current constraint pins major release v5.x; latest upstream release is v7.x. Evaluate changelog for breaking changes.",
+      "evidence_source": "Official PyPI JSON API (7.6.0)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/chardet/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (7.6.0)",
+          "url": "https://pypi.org/project/chardet/7.6.0/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://chardet.readthedocs.io",
+          "category": "docs"
+        },
+        {
+          "title": "Official Changelog",
+          "url": "https://chardet.readthedocs.io/en/latest/changelog.html",
+          "category": "changelog"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/chardet/chardet",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:8, pyproject.toml:20",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "click",
+      "normalized_name": "click",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "8.5.0",
+      "current_declared": ">=7 (requirements.txt), >=7 (pyproject.toml)",
+      "current_installed": "8.5.0",
+      "latest_stable_version": "8.5.0",
+      "recommended_target": ">=8.5.0",
+      "version_difference": ">=7 -> >=8.5.0 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release 8.5.0 available. Safe minor or patch update recommended.",
+      "evidence_source": "Official PyPI JSON API (8.5.0)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/click/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (8.5.0)",
+          "url": "https://pypi.org/project/click/8.5.0/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://click.palletsprojects.com/",
+          "category": "docs"
+        },
+        {
+          "title": "Official Changelog",
+          "url": "https://click.palletsprojects.com/page/changes/",
+          "category": "changelog"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/pallets/click/",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:6, pyproject.toml:18",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "datetime",
+      "normalized_name": "datetime",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/datetime.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "html",
+      "normalized_name": "html",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/html.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "http",
+      "normalized_name": "http",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/http.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "idna",
+      "normalized_name": "idna",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "2.7",
+      "current_declared": "==2.7 (requirements.txt), ==2.7 (pyproject.toml)",
+      "current_installed": "2.7",
+      "latest_stable_version": "3.20",
+      "recommended_target": ">=3.20",
+      "version_difference": "==2.7 -> >=3.20 (Major Update)",
+      "release_status": "stable",
+      "compatibility": "requires_migration",
+      "change_severity": "major",
+      "reason": "Current constraint pins major release v2.x; latest upstream release is v3.x. Evaluate changelog for breaking changes.",
+      "evidence_source": "Official PyPI JSON API (3.20)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/idna/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (3.20)",
+          "url": "https://pypi.org/project/idna/3.20/",
+          "category": "release"
+        },
+        {
+          "title": "Official Changelog",
+          "url": "https://github.com/kjd/idna/blob/master/HISTORY.md",
+          "category": "changelog"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/kjd/idna",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:10, pyproject.toml:22",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "jinja2",
+      "normalized_name": "jinja2",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "2.11.3",
+      "current_declared": "==2.11.3 (requirements.txt), ==2.11.3 (pyproject.toml)",
+      "current_installed": "2.11.3",
+      "latest_stable_version": "3.1.6",
+      "recommended_target": ">=3.1.4",
+      "version_difference": "==2.11.3 -> >=3.1.4 (Major Update)",
+      "release_status": "stable",
+      "compatibility": "requires_migration",
+      "change_severity": "major",
+      "reason": "Resolves MarkupSafe 3.x soft_unicode compatibility failure and security advisories; breaking changes require template test verification.",
+      "evidence_source": "Official PyPI JSON API (3.1.6)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/Jinja2/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (3.1.6)",
+          "url": "https://pypi.org/project/jinja2/3.1.6/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://jinja.palletsprojects.com/",
+          "category": "docs"
+        },
+        {
+          "title": "Official Changelog",
+          "url": "https://jinja.palletsprojects.com/changes/",
+          "category": "changelog"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/pallets/jinja/",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:4, pyproject.toml:16",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "json",
+      "normalized_name": "json",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/json.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "linkwatch",
+      "normalized_name": "linkwatch",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "Unpinned / Inferred",
+      "current_declared": "Unpinned / Inferred",
+      "current_installed": null,
+      "latest_stable_version": "Unknown \u2014 unable to verify",
+      "recommended_target": ">=Unknown \u2014 unable to verify",
+      "version_difference": "Unpinned -> >=Unknown \u2014 unable to verify (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release Unknown \u2014 unable to verify available. Safe minor or patch update recommended.",
+      "evidence_source": "Local Manifest Analysis",
+      "official_links": [],
+      "source_location": "Inferred from AST",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.720683+00:00"
+    },
+    {
+      "package_name": "nose",
+      "normalized_name": "nose",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "1.3.7",
+      "current_declared": "==1.3.7 (requirements-dev.txt)",
+      "current_installed": "1.3.7",
+      "latest_stable_version": "1.3.7",
+      "recommended_target": ">=1.3.7",
+      "version_difference": "==1.3.7 -> >=1.3.7 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release 1.3.7 available. Safe minor or patch update recommended.",
+      "evidence_source": "Official PyPI JSON API (1.3.7)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/nose/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (1.3.7)",
+          "url": "https://pypi.org/project/nose/1.3.7/",
+          "category": "release"
+        }
+      ],
+      "source_location": "requirements-dev.txt:2",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "os",
+      "normalized_name": "os",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/os.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "pydantic",
+      "normalized_name": "pydantic",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "1.10.13",
+      "current_declared": "==1.10.13 (requirements.txt), >=2 (pyproject.toml)",
+      "current_installed": "1.10.13",
+      "latest_stable_version": "2.14.1",
+      "recommended_target": ">=2.7.0",
+      "version_difference": "==1.10.13 -> >=2.7.0 (Major Update)",
+      "release_status": "stable",
+      "compatibility": "incompatible",
+      "change_severity": "major",
+      "reason": "Manifest conflict: requirements.txt declares strict pin ==1.10.13 while pyproject.toml requires >=2.0. Upgrading to Pydantic v2 resolves cross-manifest divergence.",
+      "evidence_source": "Official PyPI JSON API (2.14.1)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/pydantic/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (2.14.1)",
+          "url": "https://pypi.org/project/pydantic/2.14.1/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://pydantic.dev/docs/validation/latest/get-started/",
+          "category": "docs"
+        },
+        {
+          "title": "Official Changelog",
+          "url": "https://pydantic.dev/docs/validation/latest/get-started/changelog/",
+          "category": "changelog"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/pydantic/pydantic",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:5, pyproject.toml:17",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "pytest",
+      "normalized_name": "pytest",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "9.1.1",
+      "current_declared": "Unpinned / Inferred",
+      "current_installed": "9.1.1",
+      "latest_stable_version": "9.1.1",
+      "recommended_target": ">=7.4.0",
+      "version_difference": "Unpinned -> >=7.4.0 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "compatible",
+      "change_severity": "minor",
+      "reason": "Core testing framework with support for modern Python 3.10-3.13 syntax and pytest plugins.",
+      "evidence_source": "Official PyPI JSON API (9.1.1)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/pytest/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (9.1.1)",
+          "url": "https://pypi.org/project/pytest/9.1.1/",
+          "category": "release"
+        },
+        {
+          "title": "Official Changelog",
+          "url": "https://docs.pytest.org/en/stable/changelog.html",
+          "category": "changelog"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/pytest-dev/pytest",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements-dev.txt:1",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "python-dateutil",
+      "normalized_name": "python-dateutil",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "2.9.0.post0",
+      "current_declared": "Unpinned / Inferred",
+      "current_installed": "2.9.0.post0",
+      "latest_stable_version": "2.9.0.post0",
+      "recommended_target": ">=2.9.0.post0",
+      "version_difference": "Unpinned -> >=2.9.0.post0 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release 2.9.0.post0 available. Safe minor or patch update recommended.",
+      "evidence_source": "Official PyPI JSON API (2.9.0.post0)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/python-dateutil/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (2.9.0.post0)",
+          "url": "https://pypi.org/project/python-dateutil/2.9.0.post0/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://dateutil.readthedocs.io/en/stable/",
+          "category": "docs"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/dateutil/dateutil",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:11, pyproject.toml:23",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "re",
+      "normalized_name": "re",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/re.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "requests",
+      "normalized_name": "requests",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "2.31.0",
+      "current_declared": "==2.31.0 (requirements.txt), ==2.31.0 (pyproject.toml)",
+      "current_installed": "2.31.0",
+      "latest_stable_version": "2.34.2",
+      "recommended_target": ">=2.34.2",
+      "version_difference": "==2.31.0 -> >=2.34.2 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release 2.34.2 available. Safe minor or patch update recommended.",
+      "evidence_source": "Official PyPI JSON API (2.34.2)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/requests/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (2.34.2)",
+          "url": "https://pypi.org/project/requests/2.34.2/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://requests.readthedocs.io",
+          "category": "docs"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/psf/requests",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:3, pyproject.toml:15",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "rich",
+      "normalized_name": "rich",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "15.0.0",
+      "current_declared": "Unpinned / Inferred",
+      "current_installed": "15.0.0",
+      "latest_stable_version": "15.0.0",
+      "recommended_target": ">=15.0.0",
+      "version_difference": "Unpinned -> >=15.0.0 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release 15.0.0 available. Safe minor or patch update recommended.",
+      "evidence_source": "Official PyPI JSON API (15.0.0)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/rich/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (15.0.0)",
+          "url": "https://pypi.org/project/rich/15.0.0/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://rich.readthedocs.io/en/latest/",
+          "category": "docs"
+        }
+      ],
+      "source_location": "requirements.txt:12, pyproject.toml:24",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "setuptools",
+      "normalized_name": "setuptools",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "75.8.0",
+      "current_declared": "==75.8.0 (requirements.txt), ==75.8.0 (pyproject.toml)",
+      "current_installed": "75.8.0",
+      "latest_stable_version": "84.0.0",
+      "recommended_target": ">=84.0.0",
+      "version_difference": "==75.8.0 -> >=84.0.0 (Major Update)",
+      "release_status": "stable",
+      "compatibility": "requires_migration",
+      "change_severity": "major",
+      "reason": "Current constraint pins major release v75.x; latest upstream release is v84.x. Evaluate changelog for breaking changes.",
+      "evidence_source": "Official PyPI JSON API (84.0.0)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/setuptools/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (84.0.0)",
+          "url": "https://pypi.org/project/setuptools/84.0.0/",
+          "category": "release"
+        },
+        {
+          "title": "Official Documentation",
+          "url": "https://setuptools.pypa.io/",
+          "category": "docs"
+        },
+        {
+          "title": "Official Changelog",
+          "url": "https://setuptools.pypa.io/en/stable/history.html",
+          "category": "changelog"
+        },
+        {
+          "title": "Source Repository",
+          "url": "https://github.com/pypa/setuptools",
+          "category": "source"
+        }
+      ],
+      "source_location": "requirements.txt:9, pyproject.toml:21",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "six",
+      "normalized_name": "six",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "1.17.0",
+      "current_declared": "Unpinned / Inferred",
+      "current_installed": "1.17.0",
+      "latest_stable_version": "1.17.0",
+      "recommended_target": "prune (Python 3 native)",
+      "version_difference": "Unpinned -> prune (Python 3 native) (Minor Update)",
+      "release_status": "deprecated",
+      "compatibility": "compatible",
+      "change_severity": "minor",
+      "reason": "Python 2/3 compatibility shim no longer imported by project application code; can be safely pruned to reduce attack surface.",
+      "evidence_source": "Official PyPI JSON API (1.17.0)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/six/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (1.17.0)",
+          "url": "https://pypi.org/project/six/1.17.0/",
+          "category": "release"
+        }
+      ],
+      "source_location": "requirements.txt:7, pyproject.toml:19",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "socket",
+      "normalized_name": "socket",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/socket.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "threading",
+      "normalized_name": "threading",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/threading.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "time",
+      "normalized_name": "time",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/time.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "toml",
+      "normalized_name": "toml",
+      "ecosystem": "Python (PEP 508 / PyPI)",
+      "is_standard_library": false,
+      "current_version": "0.10.2",
+      "current_declared": "==0.10.2 (requirements.txt), ==0.10.2 (pyproject.toml)",
+      "current_installed": "0.10.2",
+      "latest_stable_version": "0.10.2",
+      "recommended_target": ">=0.10.2",
+      "version_difference": "==0.10.2 -> >=0.10.2 (Minor Update)",
+      "release_status": "stable",
+      "compatibility": "likely_compatible",
+      "change_severity": "minor",
+      "reason": "Upstream release 0.10.2 available. Safe minor or patch update recommended.",
+      "evidence_source": "Official PyPI JSON API (0.10.2)",
+      "official_links": [
+        {
+          "title": "PyPI Package Page",
+          "url": "https://pypi.org/project/toml/",
+          "category": "registry"
+        },
+        {
+          "title": "Release Notes (0.10.2)",
+          "url": "https://pypi.org/project/toml/0.10.2/",
+          "category": "release"
+        }
+      ],
+      "source_location": "requirements.txt:1, pyproject.toml:13",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    },
+    {
+      "package_name": "typing",
+      "normalized_name": "typing",
+      "ecosystem": "Python",
+      "is_standard_library": true,
+      "current_version": "Built-in (Python stdlib)",
+      "current_declared": "Standard Library",
+      "current_installed": "Python 3.12.10",
+      "latest_stable_version": "Built-in",
+      "recommended_target": "Built-in",
+      "version_difference": "None (Standard Library)",
+      "release_status": "built-in",
+      "compatibility": "built-in",
+      "change_severity": "none",
+      "reason": "Standard library module bundled with the Python runtime environment. No external PyPI manifest declaration or package upgrade required.",
+      "evidence_source": "Python Runtime Environment (sys.stdlib_module_names)",
+      "official_links": [
+        {
+          "title": "Python Standard Library Documentation",
+          "url": "https://docs.python.org/3/library/typing.html",
+          "category": "docs"
+        },
+        {
+          "title": "Python Official Reference",
+          "url": "https://docs.python.org/3/",
+          "category": "registry"
+        }
+      ],
+      "source_location": "Standard Library",
+      "verification_status": "NOT_ATTEMPTED",
+      "candidate_id": null,
+      "last_checked_at": "2026-10-15T11:49:18.902574+00:00"
+    }
+  ],
   "artifact_integrity": {
     "algorithm": "SHA-256",
-    "capsule_payload_sha256": "e640c60652e25d068ef8879c2a7a3d9f7388758c4fecf0c757e2a849c8d6cedb",
+    "capsule_payload_sha256": "86d18f627d6701c31431c8607e40fc629f20840f35b89b44765c59ad01002c5a",
     "source_snapshot_sha256": "1d6112f21ce5ddb7f235a5bc002e810151f8f447d6e09332d908001c25c23c4a",
     "disclaimer": "SHA-256 digest provides tamper-evident integrity of the serialized export audit record. A hash is not proof of truth, authorship, runtime correctness, or complete security."
   }

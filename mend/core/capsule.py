@@ -48,6 +48,8 @@ class DependencyCapsuleGenerator:
             "Candidate verification executed in isolated sandbox virtualenvs with system packages.",
             "AI-generated migration steps must be reviewed by engineers prior to deployment.",
         ]
+        self._created_timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        self._capsule_id = f"CAPSULE-{self.scan_result.target_name.upper()}-{int(datetime.datetime.now().timestamp())}"
 
     def build_capsule_data(self) -> Dict[str, Any]:
         """Build the structured capsule payload adhering to schema v1.0.0."""
@@ -74,8 +76,8 @@ class DependencyCapsuleGenerator:
 
         capsule = {
             "$schema_version": CAPSULE_SCHEMA_VERSION,
-            "capsule_id": f"CAPSULE-{self.scan_result.target_name.upper()}-{int(datetime.datetime.now().timestamp())}",
-            "generated_at": timestamp,
+            "capsule_id": self._capsule_id,
+            "generated_at": self._created_timestamp,
             "target": {
                 "name": self.scan_result.target_name,
                 "path": self.scan_result.target_path,
@@ -122,6 +124,16 @@ class DependencyCapsuleGenerator:
             "limitations_and_assumptions": self.limitations,
         }
 
+        # Dependency Intelligence & Version Comparison against official registries
+        from mend.core.version_service import DependencyIntelligenceService
+        intel_svc = DependencyIntelligenceService()
+        intelligence_report = intel_svc.analyze_repository(
+            dependencies=self.scan_result.dependencies,
+            candidate_verifications=self.candidate_verifications,
+            ecosystem=self.target_metadata.get("ecosystem", "Python"),
+        )
+        capsule["dependency_intelligence"] = list(intelligence_report["items"].values())
+
         # Compute SHA-256 integrity hash over canonical content
         canonical_content = json.dumps({
             "target": capsule["target"],
@@ -129,6 +141,7 @@ class DependencyCapsuleGenerator:
             "deterministic_rule_findings": capsule["deterministic_rule_findings"],
             "ai_migration_recommendations": capsule["ai_migration_recommendations"],
             "test_verification_evidence": capsule["test_verification_evidence"],
+            "dependency_intelligence": capsule["dependency_intelligence"],
         }, sort_keys=True)
         content_hash = hashlib.sha256(canonical_content.encode("utf-8")).hexdigest()
 
@@ -234,6 +247,80 @@ class DependencyCapsuleGenerator:
             </div>
             """
 
+        intel = data.get("dependency_intelligence", [])
+        if isinstance(intel, dict):
+            intel = list(intel.values())
+        intel_rows = ""
+        for item in intel:
+            if not isinstance(item, dict):
+                continue
+            links = item.get("official_links", [])
+            if isinstance(links, dict):
+                links_list = [{"title": k.replace("_", " ").title(), "url": v} for k, v in links.items() if v]
+            elif isinstance(links, list):
+                links_list = links
+            else:
+                links_list = []
+
+            links_html = "".join(
+                f'<a class="link-pill" href="{html.escape(l["url"])}" target="_blank" rel="noopener noreferrer">{html.escape(l.get("title", "Link"))}</a>'
+                for l in links_list if isinstance(l, dict) and l.get("url")
+            )
+            sev = item.get("change_severity", "none").lower()
+            if sev in ("major", "critical"):
+                sev_badge = "badge-critical"
+            elif sev == "minor":
+                sev_badge = "badge-medium"
+            elif sev == "patch":
+                sev_badge = "badge-low"
+            else:
+                sev_badge = "badge-info"
+
+            vs = item.get("verification_status", "NOT_RUN")
+            if vs == "VERIFIED_FIX":
+                verif_badge = "badge-success"
+            elif "FAIL" in vs or "REGRESSION" in vs:
+                verif_badge = "badge-danger"
+            else:
+                verif_badge = "badge-cat"
+
+            intel_rows += f"""
+            <tr>
+                <td><strong><code>{html.escape(item['package_name'])}</code></strong></td>
+                <td><code>{html.escape(item['current_version'])}</code></td>
+                <td><code>{html.escape(item['latest_stable_version'])}</code></td>
+                <td><strong><code>{html.escape(item['recommended_target'])}</code></strong></td>
+                <td>
+                    <span class="badge {sev_badge}">{html.escape(item.get('change_severity', ''))}</span>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;">{html.escape(item.get('compatibility', ''))}</div>
+                </td>
+                <td style="max-width: 280px;">
+                    <div style="font-size: 0.78rem;">{html.escape(item.get('reason', ''))}</div>
+                    <div class="link-list" style="margin-top: 4px;">{links_html}</div>
+                </td>
+                <td><span class="badge {verif_badge}">{html.escape(vs)}</span></td>
+            </tr>
+            """
+
+        intel_html = f"""
+        <table class="intel-table">
+            <thead>
+                <tr>
+                    <th>Package</th>
+                    <th>Current</th>
+                    <th>Latest Stable</th>
+                    <th>Recommended Target</th>
+                    <th>Severity / Compat</th>
+                    <th>Intelligence & Evidence Links</th>
+                    <th>Verification</th>
+                </tr>
+            </thead>
+            <tbody>
+                {intel_rows if intel_rows else '<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No dependency intelligence records available.</td></tr>'}
+            </tbody>
+        </table>
+        """
+
         html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -303,6 +390,54 @@ class DependencyCapsuleGenerator:
         code {{ background: #f4f4f5; padding: 0.15rem 0.35rem; border-radius: 2px; font-family: ui-monospace, monospace; color: #09090b; border: 1px solid #e4e4e7; }}
         pre {{ background: #f8fafc; padding: 0.8rem; border-radius: 2px; overflow-x: auto; font-family: ui-monospace, monospace; font-size: 0.8rem; border: 1px solid var(--border); }}
         details {{ margin-top: 0.5rem; color: var(--text-muted); }}
+        table.intel-table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-top: 0.75rem;
+            margin-bottom: 1.5rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+        }}
+        table.intel-table th {{
+            background: #f8fafc;
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: #3f3f46;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+        }}
+        table.intel-table td {{
+            padding: 0.6rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: top;
+        }}
+        table.intel-table tr:hover {{
+            background: #fbfdff;
+        }}
+        .link-list {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }}
+        .link-pill {{
+            display: inline-block;
+            padding: 0.12rem 0.4rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 2px;
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }}
+        .link-pill:hover {{
+            background: #dbeafe;
+            text-decoration: underline;
+        }}
         summary {{ cursor: pointer; color: var(--primary); font-weight: 500; font-size: 0.8rem; }}
         footer {{ border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 3rem; color: var(--text-muted); font-size: 0.8rem; }}
     </style>
@@ -334,18 +469,29 @@ class DependencyCapsuleGenerator:
         </section>
 
         <section>
+            <h2>Dependency Intelligence &amp; Side-by-Side Version Comparison ({len(intel)} Analyzed)</h2>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: -0.5rem; margin-bottom: 0.75rem;">
+                Official registry metadata (PyPI) cross-referenced against repository constraints, breaking changes, and candidate verification. Click links to inspect official upstream release notes and documentation.
+            </p>
+            {intel_html}
+        </section>
+
+        <section>
             <h2>Deterministic Rule Engine Findings ({len(findings)})</h2>
             {findings_html}
         </section>
 
         {f'<section><h2>Gemma 4 Migration Recommendations ({len(recs)})</h2>{recs_html}</section>' if recs_html else ''}
 
+        {f'<section><h2>Empirical Test Verification &amp; Sandbox Results</h2>{verif_html}</section>' if verif_html else ''}
+
         <section>
-            <h2>Artifact Integrity & Fingerprints</h2>
+            <h2>Artifact Integrity &amp; Provenance Fingerprints</h2>
             <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; font-size: 0.85rem;">
                 <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>{data.get('artifact_integrity', {}).get('capsule_payload_sha256', '')}</code></p>
-                <p style="margin: 0 0 0.5rem 0;"><strong>Target Source Snapshot SHA-256:</strong> <code>{data.get('artifact_integrity', {}).get('source_snapshot_sha256', 'N/A')}</code></p>
-                <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Disclaimer:</strong> {html.escape(data.get('artifact_integrity', {}).get('disclaimer', ''))}</p>
+                <p style="margin: 0 0 0.5rem 0;"><strong>Target Manifest Snapshot SHA-256:</strong> <code>{data.get('artifact_integrity', {}).get('source_snapshot_sha256', 'N/A')}</code></p>
+                <p style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.78rem;"><strong>Hash Coverage:</strong> Deterministic digest over sorted, normalized manifest declarations (e.g., <code>requirements.txt</code>, <code>pyproject.toml</code>). Detects any addition, removal, or modification of declared dependencies.</p>
+                <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Integrity Note:</strong> {html.escape(data.get('artifact_integrity', {}).get('disclaimer', ''))}</p>
             </div>
         </section>
 

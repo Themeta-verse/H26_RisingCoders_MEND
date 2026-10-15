@@ -185,6 +185,42 @@ def test_api_recommend_stdlib():
     assert "Built-in" in data["proposed_specifier"]
 
 
+def test_api_dependency_intelligence():
+    resp = client.get("/api/dependency-intelligence")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) >= 20
+
+    # Verify Jinja2 intelligence
+    jinja = next((i for i in data if i["package_name"].lower() == "jinja2"), None)
+    assert jinja is not None
+    assert "2.11" in jinja["current_version"] or "3.1" in jinja["current_version"]
+    assert "3.1" in jinja["recommended_target"]
+    assert jinja["change_severity"] in ["major", "minor", "patch"]
+    urls = [l["url"] for l in jinja["official_links"]]
+    assert any("pypi.org/project/Jinja2" in u for u in urls)
+    assert jinja["verification_status"] in ["NOT_ATTEMPTED", "VERIFIED_FIX"]
+
+    # Verify Standard Library intelligence
+    dt = next((i for i in data if i["package_name"].lower() == "datetime"), None)
+    assert dt is not None
+    assert dt["is_standard_library"] is True
+    assert dt["ecosystem"] == "Python"
+    dt_urls = [l["url"] for l in dt["official_links"]]
+    assert any("python.org" in u for u in dt_urls)
+
+
+def test_api_capsule_html_intelligence_and_verification():
+    # Ensure capsule report embeds both intelligence table and manifest snapshot hash
+    resp = client.get("/api/capsule/report")
+    assert resp.status_code == 200
+    assert "Dependency Intelligence &amp; Side-by-Side Version Comparison" in resp.text
+    assert "Target Manifest Snapshot SHA-256" in resp.text
+    assert "pypi.org/project/Jinja2" in resp.text
+
+
+
 
 
 
