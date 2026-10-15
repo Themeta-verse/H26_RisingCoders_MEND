@@ -83,6 +83,8 @@ class CandidateRunner:
             self.target_dir / ".venv" / "Scripts" / "python.exe",
             self.target_dir / ".venv" / "bin" / "python",
             self.target_dir / "venv" / "Scripts" / "python.exe",
+            self.target_dir.parent / "LinkWatch" / ".venv" / "Scripts" / "python.exe",
+            self.target_dir.parent / "LinkWatch" / ".venv" / "bin" / "python",
         ]:
             if cand.is_file():
                 return cand, "target_venv"

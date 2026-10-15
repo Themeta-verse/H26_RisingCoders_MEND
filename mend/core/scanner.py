@@ -417,6 +417,8 @@ class DependencyScanner:
             self.target_dir / ".venv" / "Scripts" / "pip.exe",
             self.target_dir / ".venv" / "bin" / "pip",
             self.target_dir / "venv" / "Scripts" / "pip.exe",
+            self.target_dir.parent / "LinkWatch" / ".venv" / "Scripts" / "pip.exe",
+            self.target_dir.parent / "LinkWatch" / ".venv" / "bin" / "pip",
         ]:
             if cand.is_file():
                 venv_pip = cand

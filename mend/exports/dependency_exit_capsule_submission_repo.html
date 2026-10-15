@@ -77,7 +77,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>MEND Dependency Exit Capsule</h1>
-                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Generated: <code>2026-10-15T08:33:17.702736+00:00</code> | Schema: <code>1.0.0</code></p>
+                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Generated: <code>2026-10-15T08:51:02.354850+00:00</code> | Schema: <code>1.0.0</code></p>
                 </div>
                 <div>
                     <span class="badge badge-info">Track 1: Dependency Resilience</span>
@@ -126,7 +126,7 @@
                 </div>
                 <div class="card-body">
                     <p><strong>Package:</strong> <code>Jinja2</code></p>
-                    <p>Jinja2 2.11.3 pinned in manifests imports &#x27;soft_unicode&#x27; from MarkupSafe. Installed MarkupSafe is modern 3.x, which removed &#x27;soft_unicode&#x27;.</p>
+                    <p>Jinja2 2.11.3 pinned in manifests imports &#x27;soft_unicode&#x27; from MarkupSafe. Installed MarkupSafe is 3.0.4, which removed &#x27;soft_unicode&#x27;.</p>
                     <p class="rationale"><strong>Rationale:</strong> Causes an immediate runtime ImportError when any template is rendered. This directly causes test_report.py to fail in the baseline environment.</p>
                     <p class="action"><strong>Action:</strong> Upgrade Jinja2 to &gt;=3.1.4 (or pin MarkupSafe &lt;2.1.0 in legacy candidate setups).</p>
                     <details>
@@ -284,15 +284,42 @@
             
         </section>
 
-        
+        <section><h2>Gemma 4 Migration Recommendations (2)</h2>
+            <div class="rec-card">
+                <h3>Recommendation for <code>Jinja2</code> &rarr; <code>Jinja2 &gt;=3.1.4</code></h3>
+                <p><strong>Strategy:</strong> version_bump | <strong>Confidence:</strong> 95%</p>
+                <p><strong>Target Issue:</strong> Incompatible transitive pairing with modern MarkupSafe (loss of &#x27;soft_unicode&#x27;) due to Jinja2 2.11.x usage.</p>
+                <h4>Migration Steps:</h4>
+                <ol><li>Update `requirements.txt` and `pyproject.toml` to specify `Jinja2&gt;=3.1.4` (or the latest stable version).</li><li>Run dependency resolution and ensure all transitive dependencies (especially MarkupSafe) are compatible with Jinja2 3.x.</li><li>Run the full test suite to verify that template rendering and file loading functionality remains intact.</li><li>Monitor logs for any runtime errors related to template compilation or escaping.</li></ol>
+                <h4>Suggested Tests:</h4><ul><li><code>Unit tests covering template rendering logic in `linkwatch/report.py`.</code></li><li><code>Integration tests verifying that `FileSystemLoader` correctly locates templates.</code></li><li><code>Tests specifically checking for any Unicode/soft_unicode related rendering issues.</code></li></ul>
+                <h4>Unresolved Risks / Gaps:</h4><ul><li>Potential for minor API changes in Jinja2 3.x that might require minor adjustments to the usage pattern (e.g., escaping behavior).</li><li>Risk of unforeseen conflicts with other dependencies if they have strict version requirements.</li></ul>
+            </div>
+            
+            <div class="rec-card">
+                <h3>Recommendation for <code>appdirs</code> &rarr; <code>platformdirs &gt;=3.0.0</code></h3>
+                <p><strong>Strategy:</strong> library_replacement | <strong>Confidence:</strong> 95%</p>
+                <p><strong>Target Issue:</strong> Unmaintained library usage (RULE-DEPR-001)</p>
+                <h4>Migration Steps:</h4>
+                <ol><li>Install the replacement package: `pip install platformdirs`</li><li>Update the import statement in `linkwatch/cache.py` from `from appdirs import user_cache_dir` to `from platformdirs import user_cache_dir`.</li><li>Update dependency declarations in `requirements.txt` and `pyproject.toml` to use `platformdirs` instead of `appdirs`.</li><li>Run the full test suite to ensure all file path generation and cache directory logic functions correctly across target platforms.</li></ol>
+                <h4>Suggested Tests:</h4><ul><li><code>Unit tests verifying that `user_cache_dir()` returns the expected directory path on different operating systems (Windows, Linux, macOS).</code></li><li><code>Integration tests ensuring that files written to the cache directory are correctly accessed by the application.</code></li></ul>
+                <h4>Unresolved Risks / Gaps:</h4><ul><li>Potential for subtle differences in path generation logic if the replacement is not a perfect drop-in replacement.</li><li>Dependency conflicts if other packages rely on specific internal structures of `appdirs` (though unlikely given the deprecation status).</li></ul>
+            </div>
+            </section>
 
         <section>
             <h2>Test Verification Evidence</h2>
             
             <div class="verif-section">
                 <h4>Baseline Test Results (Original Target Environment)</h4>
-                <p>Command: <code>C:\Users\vijay\OneDrive\Desktop\MEND-Hackathon\mend\.venv\Scripts\python.exe -m pytest -v</code> | Exit Code: <span class="badge badge-danger">4</span></p>
-                <p>Summary: 0 passed, 0 failed, 0 errors in 0.47s</p>
+                <p>Command: <code>C:\Users\vijay\OneDrive\Desktop\MEND-Hackathon\LinkWatch\.venv\Scripts\python.exe -m pytest -v</code> | Exit Code: <span class="badge badge-danger">1</span></p>
+                <p>Summary: 9 passed, 1 failed, 0 errors in 9.23s</p>
+            </div>
+            
+            <div class="verif-card">
+                <h4>Candidate Experiment: <code>Jinja2</code> &rarr; <code>Jinja2&gt;=3.1.4</code></h4>
+                <p>Status: <span class="badge badge-success">VERIFIED_FIX</span></p>
+                <p><strong>Verdict:</strong> Candidate verified successfully! Resolved baseline failure (1 failure -&gt; 10 passing, 0 failing).</p>
+                <p>Candidate Pytest Run: 10 passed, 0 failed in 9.45s (Exit Code: 0)</p>
             </div>
             
         </section>

@@ -207,6 +207,7 @@ All 15 tests execute cleanly:
 ├── requirements-dev.txt        # Target development requirements manifest
 ├── sites.toml                  # Target site configuration
 ├── MEND_PROJECT_RULES.md       # Operational rules and epistemic constraints
+├── MEND_Track1_Gemma4_Dependency_Resilience.pptx # Official 6-slide presentation deck
 ├── PRESENTATION_SLIDES_EVIDENCE.md # 6-slide presentation evidence guide
 ├── README.md                   # This submission guide
 └── mend/                       # MEND Application
