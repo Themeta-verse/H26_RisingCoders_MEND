@@ -130,3 +130,34 @@ def test_api_recommendations_list():
     assert isinstance(resp.json(), dict)
 
 
+def test_api_repositories_sync_protected_linkwatch():
+    # Calling sync on official LinkWatch repository must be protected and never mutate it
+    resp = client.post("/api/repositories/sync")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "protected"
+    assert "immutable challenge benchmark" in data["message"]
+    assert data["active_repository"]["id"] == "linkwatch"
+
+
+def test_api_repositories_refresh():
+    resp = client.post("/api/repositories/refresh")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "refreshed"
+    assert data["repo_id"] == "linkwatch"
+    assert "commit_hash" in data
+
+
+def test_api_scan_diff():
+    resp = client.get("/api/scan/diff?refresh=true")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "has_drift" in data
+    assert "added_dependencies" in data
+    assert "removed_dependencies" in data
+
+
+
+
+

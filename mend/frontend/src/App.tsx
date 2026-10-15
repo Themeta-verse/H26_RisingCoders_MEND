@@ -191,6 +191,8 @@ interface RepositoryInfo {
   support_level: string;
   detected_manifests: string[];
   limitations: string[];
+  last_fetched_at?: string;
+  revision_origin?: string;
   is_active: boolean;
 }
 
@@ -208,6 +210,8 @@ interface SystemStatus {
     support_level: string;
     detected_manifests: string[];
     limitations: string[];
+    last_fetched_at?: string;
+    revision_origin?: string;
     exists: boolean;
     has_pyproject: boolean;
     has_requirements: boolean;
@@ -400,7 +404,7 @@ export const App: React.FC = () => {
   };
 
   const handleRefreshActiveRepo = async () => {
-    setActionLoading(`Refreshing revision & clearing caches for active repository...`);
+    setActionLoading(`Re-reading local files & clearing caches for '${status?.target_repository.name}'...`);
     setErrorMsg(null);
     try {
       const res = await fetch('/api/repositories/refresh', { method: 'POST' });
@@ -412,6 +416,33 @@ export const App: React.FC = () => {
       setActionLoading(null);
     }
   };
+
+  const handleSyncActiveRepo = async () => {
+    if (status?.target_repository.is_official) {
+      setErrorMsg('Official LinkWatch checkout is an immutable challenge benchmark; remote git sync is intentionally disabled.');
+      return;
+    }
+    setActionLoading(`Fetching latest revision from GitHub for '${status?.target_repository.name}'...`);
+    setErrorMsg(null);
+    try {
+      const res = await fetch('/api/repositories/sync', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || `HTTP ${res.status}`);
+      }
+      if (data.is_changed) {
+        setErrorMsg(`Git Sync: Updated from commit ${data.old_commit.slice(0, 10)} to ${data.new_commit.slice(0, 10)}. In-memory scan cache invalidated.`);
+      } else {
+        setErrorMsg(`Git Sync: '${status?.target_repository.name}' is already up to date with origin/HEAD at commit ${data.new_commit.slice(0, 10)}.`);
+      }
+      await loadAllData();
+    } catch (err: any) {
+      setErrorMsg(`Git sync failed: ${err.message}`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
 
   const handleCheckDrift = async (refresh: boolean = true) => {
     setLoadingDrift(true);
@@ -596,31 +627,75 @@ export const App: React.FC = () => {
 
           {/* Precision Diagnostic Status */}
           <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'var(--canvas-subtle)', padding: '6px 12px', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>TARGET:</span>{' '}
-              <button
-                onClick={() => setIsRepoModalOpen(true)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: 0,
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  color: 'var(--cobalt)',
-                  fontFamily: 'inherit',
-                  fontSize: 'inherit',
-                  textDecoration: 'underline',
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>TARGET:</span>
+              <select
+                id="repository-selector"
+                value={activeRepoId}
+                onChange={e => {
+                  if (e.target.value === '__add_new__') {
+                    setIsRepoModalOpen(true);
+                  } else {
+                    handleSelectRepository(e.target.value);
+                  }
                 }}
-                title="Click to switch target or clone a public GitHub repository"
+                disabled={loading || !!actionLoading}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: 'var(--text-black)',
+                  background: '#ffffff',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-xs)',
+                  fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  maxWidth: '240px',
+                }}
+                title="Select active repository target or add a public GitHub repository"
               >
-                {status?.target_repository.name || 'LinkWatch'}
+                {repositories.map(repo => (
+                  <option key={repo.id} value={repo.id}>
+                    {repo.name} {repo.is_official ? '(Official Target)' : `(${repo.short_commit})`}
+                  </option>
+                ))}
+                <option value="__add_new__">+ Add Public GitHub Repo...</option>
+              </select>
+
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={() => setIsRepoModalOpen(true)}
+                title="Add a new public GitHub repository"
+                style={{ padding: '2px 8px', fontSize: '0.75rem', color: 'var(--cobalt)', borderColor: 'var(--cobalt-border)' }}
+              >
+                + Add Repo
               </button>
-              <span className="mono" style={{ fontSize: '0.6875rem', background: 'var(--border)', padding: '1px 5px', borderRadius: '3px' }} title={status?.target_repository.commit_hash}>
+
+              <span className="mono" style={{ fontSize: '0.6875rem', background: 'var(--border)', padding: '2px 6px', borderRadius: '3px', fontWeight: 600 }} title={`Commit SHA: ${status?.target_repository.commit_hash}`}>
                 {status?.target_repository.short_commit || 'local'}
               </span>
+
+              <span
+                style={{
+                  fontSize: '0.6875rem',
+                  padding: '2px 6px',
+                  borderRadius: '3px',
+                  background: status?.target_repository.is_official ? '#f1f5f9' : '#ecfdf5',
+                  color: status?.target_repository.is_official ? '#475569' : '#047857',
+                  border: `1px solid ${status?.target_repository.is_official ? '#cbd5e1' : '#a7f3d0'}`,
+                  fontWeight: 600,
+                }}
+                title={status?.target_repository.is_official
+                  ? 'Official LinkWatch benchmark (immutable local target)'
+                  : `Cloned from ${status?.target_repository.clone_url || 'GitHub'} at ${status?.target_repository.last_fetched_at || 'initial clone'}`
+                }
+              >
+                {status?.target_repository.is_official ? 'Benchmark: Immutable' : 'Revision: Fetched'}
+              </span>
+
               <span style={{
                 fontSize: '0.6875rem',
-                padding: '1px 6px',
+                padding: '2px 6px',
                 borderRadius: '3px',
                 background: status?.target_repository.support_level === 'full' ? '#ecfdf5' : '#fffbeb',
                 color: status?.target_repository.support_level === 'full' ? '#047857' : '#b45309',
@@ -630,25 +705,44 @@ export const App: React.FC = () => {
                 {status?.target_repository.ecosystem?.split(' ')[0] || 'Python'} ({status?.target_repository.support_level || 'full'})
               </span>
             </div>
-            <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border)' }} />
+
+            <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border)' }} />
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span className={`dot ${status?.gemma_runtime.is_online ? 'dot-green' : 'dot-red'}`} />
               <span style={{ color: 'var(--text-muted)' }}>RUNTIME:</span>{' '}
               <span className="mono" style={{ fontWeight: 600, color: 'var(--text-black)' }}>{status?.gemma_runtime.model_tag || 'gemma4:e2b-it-q4_K_M'}</span>
               <span style={{ color: 'var(--text-muted)' }}>({status?.gemma_runtime.is_online ? 'Ollama Online' : 'Offline'})</span>
             </div>
-            <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border)' }} />
-            <button className="btn btn-secondary btn-sm" onClick={() => setIsRepoModalOpen(true)} title="Manage repositories">
-              Switch / Add Repo
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => handleCheckDrift(true)} disabled={loading || !!actionLoading || loadingDrift} title="Compare current and previous scan snapshots to detect drift">
-              {loadingDrift ? 'Diffing...' : 'Drift Check'}
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={handleRefreshActiveRepo} disabled={loading || !!actionLoading} title="Refresh git revision and clear caches">
-              Refresh Rev
-            </button>
-            <button className="btn btn-secondary btn-sm" onClick={loadAllData} disabled={loading || !!actionLoading}>
+
+            <div style={{ width: '1px', height: '16px', backgroundColor: 'var(--border)' }} />
+
+            {/* Action Buttons with Explicit Operational Semantics */}
+            {!status?.target_repository.is_official && (
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={handleSyncActiveRepo}
+                disabled={loading || !!actionLoading}
+                title="Fetches latest revision from GitHub via git fetch/reset and clears scan caches"
+              >
+                Sync with GitHub
+              </button>
+            )}
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={handleRefreshActiveRepo}
+              disabled={loading || !!actionLoading}
+              title="Re-runs deterministic AST and manifest scanning on current local files without network calls"
+            >
               Re-scan
+            </button>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => handleCheckDrift(true)}
+              disabled={loading || !!actionLoading || loadingDrift}
+              title="Deterministically compares previous and current scan snapshots to detect manifest, specifier, and AST usage drift"
+            >
+              {loadingDrift ? 'Diffing...' : 'Drift Check'}
             </button>
           </div>
         </div>

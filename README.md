@@ -260,7 +260,41 @@ All 25 tests execute cleanly:
    - Download the versioned audit capsule as JSON: [dependency_exit_capsule_linkwatch.json](mend/exports/dependency_exit_capsule_linkwatch.json)
    - View the standalone executive HTML report: [dependency_exit_capsule_linkwatch.html](mend/exports/dependency_exit_capsule_linkwatch.html)
 
+### 8.1 Repository Selector & Multi-Repository Workflow
+
+MEND features a dedicated **Repository Selector** in the top navigation strip adjacent to `TARGET:`:
+- **Active Repository Badge & Commit**: Displays the current target (e.g. `linkwatch`, `bottlepy__bottle`), its 10-character commit SHA (`f52f3930c8`), and its revision state (`Benchmark: Immutable` vs `Revision: Fetched`).
+- **Repository Switching**: Instantaneously switch between registered repositories. All scan caches, findings, baseline results, and capsules remain strictly isolated per repository.
+- **Add Public Repository**: Input any public GitHub repository URL (e.g., `https://github.com/bottlepy/bottle`) to clone `--depth 1` without executing code.
+
+### 8.2 Operational Semantics: Sync vs. Re-scan vs. Drift Check
+
+MEND provides clear semantic boundaries for repository operations:
+1. **Add Repository** (`POST /api/repositories/add`):
+   - Clones a public GitHub repository using `git clone --depth 1` into `mend/workspaces/<owner>__<repo>`.
+   - Records the initial commit SHA and sets origin to `fetched`.
+   - Strictly static: code is never executed during clone or registration.
+2. **Sync with GitHub** (`POST /api/repositories/sync`):
+   - **Explicit remote network operation**: Runs `git fetch --depth 1 origin` and `git reset --hard origin/HEAD` on cloned public repositories.
+   - Detects whether a new revision was fetched or if the local checkout was already up to date.
+   - Invalidates stale scan caches and forces clean re-analysis upon revision change.
+   - **Safety Guarantee**: Explicitly protected on the official `linkwatch` benchmark directory. LinkWatch is an immutable challenge baseline and can never be overwritten or git-mutated.
+3. **Re-scan** (`POST /api/repositories/refresh` / `GET /api/scan?refresh=true`):
+   - **Strictly local operation**: Re-executes static AST parsing and manifest inspection against the local files currently in the workspace.
+   - **Never makes remote network calls to GitHub**. Reflects local file modifications or working-copy edits.
+4. **Drift Check** (`GET /api/scan/diff?refresh=true`):
+   - Computes an in-memory snapshot diff comparing the previous scan with the current scan.
+   - Identifies added/removed dependencies, version specifier shifts, AST import count fluctuations, manifest conflict changes, and source tree SHA-256 digest modifications.
+
+### 8.3 Static Analysis Safety Guarantee
+
+Repository inspection in MEND is **strictly static by default**:
+- Python files are parsed using Python's native `ast` module and regex tokenizers. Code is never imported or executed during scanning.
+- JavaScript / TypeScript packages are parsed via deterministic `package.json` manifest analysis.
+- Dynamic execution is quarantined exclusively to the **Empirical Sandbox Candidate Verification** workflow, which operates within temporary sandbox directories under strict timeouts.
+
 ---
+
 
 ## 9. Project Structure
 

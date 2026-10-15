@@ -45,6 +45,8 @@ class RepositoryMetadata:
     support_level: str
     detected_manifests: List[str]
     limitations: List[str]
+    last_fetched_at: str
+    revision_origin: str
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -66,6 +68,11 @@ class RepositorySession:
         self.path = Path(path).resolve()
         self.clone_url = clone_url
         self.is_official = is_official
+        self.last_fetched_at: str = (
+            "Local official benchmark"
+            if is_official
+            else datetime.datetime.now(datetime.timezone.utc).isoformat()
+        )
 
         self.commit_hash: str = self._resolve_commit_hash()
         self.adapter, self.detection = detect_ecosystem(self.path)
@@ -102,8 +109,83 @@ class RepositorySession:
         self.commit_hash = self._resolve_commit_hash()
         return self.commit_hash
 
+    def sync_with_remote(self) -> Dict[str, Any]:
+        """Explicitly fetch latest revision from GitHub for cloned repositories.
+
+        Strict Safety Constraint:
+        Never mutates or pulls into the official LinkWatch directory to protect baseline benchmark integrity.
+        """
+        if self.is_official:
+            return {
+                "status": "protected",
+                "message": "Official LinkWatch checkout is an immutable challenge benchmark; remote sync disabled.",
+                "old_commit": self.commit_hash,
+                "new_commit": self.commit_hash,
+                "is_changed": False,
+            }
+
+        if not (self.path / ".git").exists():
+            return {
+                "status": "local_only",
+                "message": "Repository is a local directory without an active git remote.",
+                "old_commit": self.commit_hash,
+                "new_commit": self.commit_hash,
+                "is_changed": False,
+            }
+
+        git_env = os.environ.copy()
+        git_env["GIT_TERMINAL_PROMPT"] = "0"
+        git_env["GIT_ASKPASS"] = "echo"
+
+        old_commit = self.commit_hash
+        try:
+            # 1. Fetch latest commits
+            subprocess.run(
+                ["git", "fetch", "--depth", "1", "origin"],
+                cwd=str(self.path),
+                env=git_env,
+                capture_output=True,
+                text=True,
+                timeout=45,
+                check=True,
+            )
+            # 2. Reset hard to origin/HEAD
+            subprocess.run(
+                ["git", "reset", "--hard", "origin/HEAD"],
+                cwd=str(self.path),
+                env=git_env,
+                capture_output=True,
+                text=True,
+                timeout=15,
+            )
+            new_commit = self._resolve_commit_hash()
+            self.commit_hash = new_commit
+            self.last_fetched_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            is_changed = (old_commit != new_commit)
+
+            if is_changed:
+                self.reset_caches()
+                msg = f"Updated to latest commit: {old_commit[:10]} -> {new_commit[:10]}. Invalidated stale scan cache."
+            else:
+                msg = f"Repository is already up to date with origin/HEAD at commit {new_commit[:10]}."
+
+            return {
+                "status": "success",
+                "message": msg,
+                "old_commit": old_commit,
+                "new_commit": new_commit,
+                "is_changed": is_changed,
+            }
+        except Exception as exc:
+            raise RuntimeError(f"Failed to fetch updates from GitHub: {str(exc)}")
+
     def get_metadata(self) -> RepositoryMetadata:
         short_hash = self.commit_hash[:10] if len(self.commit_hash) >= 10 else self.commit_hash
+        rev_origin = (
+            "Local official challenge target (read-only)"
+            if self.is_official
+            else f"Cloned from {self.clone_url or 'remote'}"
+        )
         return RepositoryMetadata(
             id=self.repo_id,
             name=self.name,
@@ -116,6 +198,8 @@ class RepositorySession:
             support_level=self.detection.support_level.value,
             detected_manifests=self.detection.detected_manifests,
             limitations=self.detection.limitations,
+            last_fetched_at=self.last_fetched_at,
+            revision_origin=rev_origin,
         )
 
     def reset_caches(self) -> None:

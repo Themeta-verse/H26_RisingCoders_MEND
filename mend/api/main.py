@@ -138,7 +138,7 @@ def add_github_repository(req: AddRepoRequest):
 
 @app.post("/api/repositories/refresh")
 def refresh_active_repository():
-    """Refresh git revision and clear caches for fresh scan of active repository."""
+    """Re-read local git revision and clear in-memory caches for a clean re-scan (local files only)."""
     session = repo_manager.get_active_session()
     new_commit = session.refresh_commit()
     session.reset_caches()
@@ -148,6 +148,30 @@ def refresh_active_repository():
         "commit_hash": new_commit,
         "short_commit": new_commit[:10] if len(new_commit) >= 10 else new_commit,
     }
+
+
+@app.post("/api/repositories/sync")
+def sync_repository_from_github():
+    """Explicitly fetch latest revision from GitHub for the active cloned repository.
+
+    Safety Guarantee: Never mutates or overwrites the official LinkWatch directory.
+    """
+    session = repo_manager.get_active_session()
+    try:
+        res = session.sync_with_remote()
+        return {
+            "status": res["status"],
+            "message": res["message"],
+            "repo_id": session.repo_id,
+            "old_commit": res["old_commit"],
+            "new_commit": res["new_commit"],
+            "short_commit": res["new_commit"][:10],
+            "is_changed": res["is_changed"],
+            "active_repository": session.get_metadata().to_dict(),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch updates from GitHub: {str(exc)}")
+
 
 
 # ---------------------------------------------------------------------------
