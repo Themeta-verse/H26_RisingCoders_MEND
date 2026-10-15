@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEND Dependency Exit Capsule — LinkWatch</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --border: #e4e4e7;
+            --text: #18181b;
+            --text-muted: #71717a;
+            --primary: #1d4ed8;
+            --crit: #991b1b;
+            --high: #9a3412;
+            --med: #854d0e;
+            --low: #1d4ed8;
+            --info: #1d4ed8;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2.5rem;
+            line-height: 1.5;
+        }
+        .container { max-width: 1040px; margin: 0 auto; }
+        header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+        h1, h2, h3, h4 { color: #09090b; margin-top: 0; letter-spacing: -0.02em; }
+        .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 2px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; font-family: ui-monospace, monospace; }
+        .badge-critical { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .badge-high { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+        .badge-medium { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+        .badge-low, .badge-info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .badge-cat { background: #f4f4f5; color: #3f3f46; margin-left: 0.4rem; border: 1px solid #e4e4e7; }
+        .badge-danger { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+        .badge-success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        .badge-warning { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .metric-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 2px;
+        }
+        .metric-val { font-size: 1.6rem; font-weight: 700; color: #09090b; }
+        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px; }
+        .finding-card, .rec-card, .verif-card, .verif-section {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .finding-card.sev-critical { border-left: 3px solid #b91c1c; }
+        .finding-card.sev-high { border-left: 3px solid #c2410c; }
+        .finding-card.sev-medium { border-left: 3px solid #a16207; }
+        .finding-card.sev-low { border-left: 3px solid #1d4ed8; }
+        .finding-card.sev-info { border-left: 3px solid #1d4ed8; }
+        code { background: #f4f4f5; padding: 0.15rem 0.35rem; border-radius: 2px; font-family: ui-monospace, monospace; color: #09090b; border: 1px solid #e4e4e7; }
+        pre { background: #f8fafc; padding: 0.8rem; border-radius: 2px; overflow-x: auto; font-family: ui-monospace, monospace; font-size: 0.8rem; border: 1px solid var(--border); }
+        details { margin-top: 0.5rem; color: var(--text-muted); }
+        summary { cursor: pointer; color: var(--primary); font-weight: 500; font-size: 0.8rem; }
+        footer { border-top: 1px solid var(--border); padding-top: 1.5rem; margin-top: 3rem; color: var(--text-muted); font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>MEND Dependency Exit Capsule</h1>
+                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Generated: <code>2026-10-15T08:21:54.237097+00:00</code> | Schema: <code>1.0.0</code></p>
+                </div>
+                <div>
+                    <span class="badge badge-info">Track 1: Dependency Resilience</span>
+                </div>
+            </div>
+        </header>
+
+        <section>
+            <h2>Executive Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card"><div class="metric-val">30</div><div class="metric-label">Total Dependencies</div></div>
+                <div class="metric-card"><div class="metric-val">27</div><div class="metric-label">Direct Code Usages</div></div>
+                <div class="metric-card"><div class="metric-val" style="color: var(--crit);">1</div><div class="metric-label">Critical Findings</div></div>
+                <div class="metric-card"><div class="metric-val" style="color: var(--high);">2</div><div class="metric-label">High Risk Findings</div></div>
+                <div class="metric-card"><div class="metric-val" style="color: var(--med);">3</div><div class="metric-label">Medium Findings</div></div>
+                <div class="metric-card"><div class="metric-val" style="color: var(--info);">3</div><div class="metric-label">Unreferenced / Zombie</div></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Deterministic Rule Engine Findings (8)</h2>
+            
+            <div class="finding-card sev-high">
+                <div class="card-header">
+                    <span class="badge badge-high">High</span>
+                    <span class="badge badge-cat">Manifest Drift</span>
+                    <strong>RULE-CONF-001</strong>: Manifest Specification Conflict for pydantic
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>pydantic</code></p>
+                    <p>Discrepancy detected between manifests: requirements.txt specifies &#x27;==1.10.13&#x27;, pyproject.toml specifies &#x27;&gt;=2&#x27;</p>
+                    <p class="rationale"><strong>Rationale:</strong> Conflicting version specifiers across manifests lead to non-deterministic installation, silent version drift between development and production, and package resolver confusion.</p>
+                    <p class="action"><strong>Action:</strong> Reconcile pydantic version requirements across pyproject.toml and requirements.txt.</p>
+                    <details>
+                        <summary>Observed Evidence (2 locations)</summary>
+                        <ul><li><code>requirements.txt:5</code>: <pre>pydantic==1.10.13</pre></li><li><code>pyproject.toml:17</code>: <pre>pydantic&gt;=2</pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="finding-card sev-critical">
+                <div class="card-header">
+                    <span class="badge badge-critical">Critical</span>
+                    <span class="badge badge-cat">Compatibility</span>
+                    <strong>RULE-COMPAT-001</strong>: Incompatible Transitive Pairing: Jinja2 2.11.x with Modern MarkupSafe
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>Jinja2</code></p>
+                    <p>Jinja2 2.11.3 pinned in manifests imports &#x27;soft_unicode&#x27; from MarkupSafe. Installed MarkupSafe is 3.0.4, which removed &#x27;soft_unicode&#x27;.</p>
+                    <p class="rationale"><strong>Rationale:</strong> Causes an immediate runtime ImportError when any template is rendered. This directly causes test_report.py to fail in the baseline environment.</p>
+                    <p class="action"><strong>Action:</strong> Upgrade Jinja2 to &gt;=3.1.4 (or pin MarkupSafe &lt;2.1.0 in legacy candidate setups).</p>
+                    <details>
+                        <summary>Observed Evidence (5 locations)</summary>
+                        <ul><li><code>requirements.txt:4</code>: <pre>Jinja2==2.11.3</pre></li><li><code>pyproject.toml:16</code>: <pre>Jinja2==2.11.3</pre></li><li><code>linkwatch/report.py:3</code>: <pre>   1   from datetime import datetime
+   2   
+   3 &gt; from jinja2 import Environment, FileSystemLoader, select_autoescape
+   4   
+   5   from .resources import TEMPLATE_NAME, template_dir</pre></li><li><code>linkwatch/report.py:3</code>: <pre>   1   from datetime import datetime
+   2   
+   3 &gt; from jinja2 import Environment, FileSystemLoader, select_autoescape
+   4   
+   5   from .resources import TEMPLATE_NAME, template_dir</pre></li><li><code>linkwatch/report.py:3</code>: <pre>   1   from datetime import datetime
+   2   
+   3 &gt; from jinja2 import Environment, FileSystemLoader, select_autoescape
+   4   
+   5   from .resources import TEMPLATE_NAME, template_dir</pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="finding-card sev-high">
+                <div class="card-header">
+                    <span class="badge badge-high">High</span>
+                    <span class="badge badge-cat">Compatibility</span>
+                    <strong>RULE-BREAK-001</strong>: Pydantic V1/V2 Incompatibility and Specifier Mismatch
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>pydantic</code></p>
+                    <p>Source code utilizes Pydantic v1 &#x27;@validator&#x27; and &#x27;class Config&#x27; patterns, while pyproject.toml requests &#x27;pydantic&gt;=2&#x27; and requirements.txt locks &#x27;pydantic==1.10.13&#x27;.</p>
+                    <p class="rationale"><strong>Rationale:</strong> Pydantic v2 deprecates @validator in favor of @field_validator and alters BaseModel.Config. Installing via pyproject.toml without pinning v1 will cause deprecation warnings or validation failures.</p>
+                    <p class="action"><strong>Action:</strong> Either align manifests to &#x27;pydantic&lt;2.0.0&#x27; or migrate config.py to Pydantic v2 (@field_validator, ConfigDict).</p>
+                    <details>
+                        <summary>Observed Evidence (6 locations)</summary>
+                        <ul><li><code>linkwatch/config.py:4</code>: <pre>   2   
+   3   import toml
+   4 &gt; from pydantic import BaseModel, validator
+   5   
+   6   </pre></li><li><code>linkwatch/config.py:4</code>: <pre>   2   
+   3   import toml
+   4 &gt; from pydantic import BaseModel, validator
+   5   
+   6   </pre></li><li><code>linkwatch/config.py:4</code>: <pre>   2   
+   3   import toml
+   4 &gt; from pydantic import BaseModel, validator
+   5   
+   6   </pre></li><li><code>linkwatch/config.py:4</code>: <pre>   2   
+   3   import toml
+   4 &gt; from pydantic import BaseModel, validator
+   5   
+   6   </pre></li><li><code>requirements.txt:5</code>: <pre>pydantic==1.10.13</pre></li><li><code>pyproject.toml:17</code>: <pre>pydantic&gt;=2</pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="finding-card sev-medium">
+                <div class="card-header">
+                    <span class="badge badge-medium">Medium</span>
+                    <span class="badge badge-cat">Deprecation</span>
+                    <strong>RULE-DEPR-001</strong>: Unmaintained Library: appdirs Pinned at 1.4.4
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>appdirs</code></p>
+                    <p>appdirs is an abandoned library with no releases since 2017. The Python packaging community has officially standardized on &#x27;platformdirs&#x27; as its direct drop-in replacement.</p>
+                    <p class="rationale"><strong>Rationale:</strong> appdirs does not receive bug fixes, security patches, or updates for newer operating systems.</p>
+                    <p class="action"><strong>Action:</strong> Migrate from appdirs to platformdirs (drop-in API compatible user_cache_dir).</p>
+                    <details>
+                        <summary>Observed Evidence (3 locations)</summary>
+                        <ul><li><code>requirements.txt:2</code>: <pre>appdirs==1.4.4</pre></li><li><code>pyproject.toml:14</code>: <pre>appdirs==1.4.4</pre></li><li><code>linkwatch/cache.py:4</code>: <pre>   2   import os
+   3   
+   4 &gt; from appdirs import user_cache_dir
+   5   
+   6   RESULTS_FILE = &quot;results.json&quot;</pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="finding-card sev-medium">
+                <div class="card-header">
+                    <span class="badge badge-medium">Medium</span>
+                    <span class="badge badge-cat">Deprecation</span>
+                    <strong>RULE-DEPR-002</strong>: Deprecated API: pkg_resources Imported Directly
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>setuptools</code></p>
+                    <p>linkwatch imports pkg_resources to locate template assets. Setuptools has formally deprecated pkg_resources, and it generates a runtime DeprecationWarning.</p>
+                    <p class="rationale"><strong>Rationale:</strong> pkg_resources has slow import overhead and is scheduled for retirement. Standard library &#x27;importlib.resources&#x27; (available in Python 3.9+) is the modern, zero-dependency replacement.</p>
+                    <p class="action"><strong>Action:</strong> Replace pkg_resources with importlib.resources.files() from the Python standard library.</p>
+                    <details>
+                        <summary>Observed Evidence (1 locations)</summary>
+                        <ul><li><code>linkwatch/resources.py:1</code>: <pre>   1 &gt; import pkg_resources
+   2   
+   3   TEMPLATE_NAME = &quot;status.html.j2&quot;</pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="finding-card sev-medium">
+                <div class="card-header">
+                    <span class="badge badge-medium">Medium</span>
+                    <span class="badge badge-cat">Obsolescence</span>
+                    <strong>RULE-OBSOLETE-001</strong>: Obsolete Test Framework: nose==1.3.7 Declared in Dev Requirements
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>nose</code></p>
+                    <p>nose is an obsolete test runner discontinued since 2015. It relies on the &#x27;imp&#x27; module which was completely removed in Python 3.12, causing nose to fail to even import.</p>
+                    <p class="rationale"><strong>Rationale:</strong> LinkWatch&#x27;s test suite is written using pytest fixtures and test functions; nose is completely unused.</p>
+                    <p class="action"><strong>Action:</strong> Remove nose==1.3.7 from requirements-dev.txt and rely exclusively on pytest.</p>
+                    <details>
+                        <summary>Observed Evidence (1 locations)</summary>
+                        <ul><li><code>requirements-dev.txt:2</code>: <pre>nose==1.3.7</pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="finding-card sev-low">
+                <div class="card-header">
+                    <span class="badge badge-low">Low</span>
+                    <span class="badge badge-cat">Zombie Dependency</span>
+                    <strong>RULE-ZOMBIE-001</strong>: Unreferenced Dependency: six
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>six</code></p>
+                    <p>six is declared in both requirements.txt and pyproject.toml, but 0 imports were found in the codebase.</p>
+                    <p class="rationale"><strong>Rationale:</strong> Python 2 compatibility shim is unnecessary for a codebase targeting Python &gt;= 3.10. Leaving unused dependencies bloats the install surface and confuses audits.</p>
+                    <p class="action"><strong>Action:</strong> Remove &#x27;six&#x27; from pyproject.toml and requirements.txt.</p>
+                    <details>
+                        <summary>Observed Evidence (2 locations)</summary>
+                        <ul><li><code>requirements.txt:7</code>: <pre>six</pre></li><li><code>pyproject.toml:19</code>: <pre>six</pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="finding-card sev-info">
+                <div class="card-header">
+                    <span class="badge badge-info">Info</span>
+                    <span class="badge badge-cat">Modernization</span>
+                    <strong>RULE-STDLIB-001</strong>: Standard Library Modernization Opportunity: toml -&gt; tomllib
+                </div>
+                <div class="card-body">
+                    <p><strong>Package:</strong> <code>toml</code></p>
+                    <p>LinkWatch uses the third-party &#x27;toml&#x27; package for reading sites.toml. Python 3.11+ includes &#x27;tomllib&#x27; in the standard library.</p>
+                    <p class="rationale"><strong>Rationale:</strong> Transitioning to tomllib eliminates an external dependency for reading TOML configurations.</p>
+                    <p class="action"><strong>Action:</strong> Use standard library &#x27;tomllib&#x27; on Python 3.11+ with fallback to &#x27;tomli&#x27; on Python 3.10.</p>
+                    <details>
+                        <summary>Observed Evidence (3 locations)</summary>
+                        <ul><li><code>requirements.txt:1</code>: <pre>toml==0.10.2</pre></li><li><code>pyproject.toml:13</code>: <pre>toml==0.10.2</pre></li><li><code>linkwatch/config.py:3</code>: <pre>   1   from typing import List
+   2   
+   3 &gt; import toml
+   4   from pydantic import BaseModel, validator
+   5   </pre></li></ul>
+                    </details>
+                </div>
+            </div>
+            
+        </section>
+
+        
+
+        <section>
+            <h2>Test Verification Evidence</h2>
+            
+            <div class="verif-section">
+                <h4>Baseline Test Results (Original Target Environment)</h4>
+                <p>Command: <code>C:\Users\vijay\OneDrive\Desktop\MEND-Hackathon\LinkWatch\.venv\Scripts\python.exe -m pytest -v</code> | Exit Code: <span class="badge badge-danger">1</span></p>
+                <p>Summary: 9 passed, 1 failed, 0 errors in 9.2s</p>
+            </div>
+            
+        </section>
+
+        <footer>
+            <p><strong>MEND Provenance:</strong> AI analysis performed by Gemma 4 (<code>gemma4:e2b-it-q4_K_M</code>) via local Ollama runtime. Baseline and candidate tests executed via real pytest subprocesses in isolated sandbox environments.</p>
+        </footer>
+    </div>
+</body>
+</html>
