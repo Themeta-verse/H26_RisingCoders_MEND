@@ -125,7 +125,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <h1>MEND Dependency Exit Capsule</h1>
-                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Commit: <code>f52f3930c8</code> | Ecosystem: <strong>Python (PEP 508 / PyPI)</strong> (full) | Generated: <code>2026-10-15T11:49:18.910936+00:00</code></p>
+                    <p style="color: var(--text-muted); margin: 0;">Target: <strong>LinkWatch</strong> | Commit: <code>f52f3930c8</code> | Ecosystem: <strong>Python (PEP 508 / PyPI)</strong> (full) | Generated: <code>2026-10-15T12:22:14.497681+00:00</code></p>
                 </div>
                 <div>
                     <span class="badge badge-info">Track 1: Dependency Resilience</span>
@@ -757,20 +757,30 @@
             
         </section>
 
-        
+        <section><h2>Gemma 4 Migration Recommendations (1)</h2>
+            <div class="rec-card">
+                <h3>Recommendation for <code>datetime</code> &rarr; <code>datetime  (Built-in)</code></h3>
+                <p><strong>Strategy:</strong> informational_stdlib | <strong>Confidence:</strong> 100%</p>
+                <p><strong>Target Issue:</strong> Standard Library Module (Built-in)</p>
+                <h4>Migration Steps:</h4>
+                <ol><li>&#x27;datetime&#x27; is part of Python&#x27;s standard library (&gt;=3.10).</li><li>No external package declaration or PyPI migration is required.</li><li>Verify syntax and API usage against project Python version requirements.</li></ol>
+                <h4>Suggested Tests:</h4><ul><li><code>python -c &#x27;import datetime&#x27;</code></li></ul>
+                
+            </div>
+            </section>
 
         <section><h2>Empirical Test Verification &amp; Sandbox Results</h2>
             <div class="verif-section">
                 <h4>Baseline Test Results (Original Target Environment)</h4>
                 <p>Command: <code>C:\Users\vijay\OneDrive\Desktop\MEND-Hackathon\LinkWatch\.venv\Scripts\python.exe -m pytest -v</code> | Exit Code: <span class="badge badge-danger">1</span></p>
-                <p>Summary: 9 passed, 1 failed, 0 errors in 9.74s</p>
+                <p>Summary: 9 passed, 1 failed, 0 errors in 9.34s</p>
             </div>
             </section>
 
         <section>
             <h2>Artifact Integrity &amp; Provenance Fingerprints</h2>
             <div style="background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 4px; font-size: 0.85rem;">
-                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>26b2b7fe0ac79bc358767c3d4de85d9af987127f59b64ffcfd776154f43849c6</code></p>
+                <p style="margin: 0 0 0.5rem 0;"><strong>Capsule Content SHA-256:</strong> <code>f51e64a373ebab1bbffde4047127a21c2120a406999b5316e150ef3c03e68661</code></p>
                 <p style="margin: 0 0 0.5rem 0;"><strong>Target Manifest Snapshot SHA-256:</strong> <code>1d6112f21ce5ddb7f235a5bc002e810151f8f447d6e09332d908001c25c23c4a</code></p>
                 <p style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.78rem;"><strong>Hash Coverage:</strong> Deterministic digest over sorted, normalized manifest declarations (e.g., <code>requirements.txt</code>, <code>pyproject.toml</code>). Detects any addition, removal, or modification of declared dependencies.</p>
                 <p style="margin: 0; color: var(--text-muted); font-size: 0.75rem;"><strong>Integrity Note:</strong> SHA-256 digest provides tamper-evident integrity of the serialized export audit record. A hash is not proof of truth, authorship, runtime correctness, or complete security.</p>
